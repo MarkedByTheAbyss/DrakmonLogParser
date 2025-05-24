@@ -8,18 +8,18 @@ int main()
 {
     time_t start = time(nullptr);
     
-    drakmonLogParser* aboba = new drakmonLogParser();
-    aboba->LoadPreInstProcs("preinst.json");
-    aboba->SortProcesses("2ba1ab51-d1d6-47d3-a911-a3583b1dba91_drakmon.log");
+    drakmonLogParser* parser = new drakmonLogParser();
+    parser->LoadPreInstProcs("preinst.json");
+    parser->SortProcesses("2ba1ab51-d1d6-47d3-a911-a3583b1dba91_drakmon.log");
     time_t end = time(nullptr);
-    std::cout << "\n\Process tree built, procesess sorted into new file.\n";
-    std::cout << "\n\tWork time: " << end - start << " seconds!\n" << std::endl;
+    std::cout << "\nProcess tree built, procesess sorted into new file.";
+    std::cout << "\nWork time: " << end - start << " seconds!\n" << std::endl;
 
     start = end;
-    aboba->AnalyzeProcessTree();
+    parser->AnalyzeProcessTree();
     end = time(nullptr);
-    std::cout << "\n\Process tree analysis complete.\n";
-    std::cout << "\n\tWork time: " << end - start << " seconds!\n" << std::endl;
+    std::cout << "\nProcess tree analysis complete.";
+    std::cout << "\nWork time: " << end - start << " seconds!\n" << std::endl;
 
     //aboba->WriteProcTree();
     return 0;

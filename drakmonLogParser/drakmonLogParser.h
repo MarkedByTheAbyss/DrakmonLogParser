@@ -12,6 +12,9 @@ using json = nlohmann::json;
 template<class T>
 concept Filestream = std::is_base_of<std::ios, T>::value;
 
+typedef std::map<const char*, uint> RuleMatches;
+static RuleMatches m_Matcher;
+
 struct PreInstalled
 {
 	uint PID;

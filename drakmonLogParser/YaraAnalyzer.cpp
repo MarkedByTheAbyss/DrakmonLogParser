@@ -70,3 +70,24 @@ int YaraAnalyzer::Scan(const uint8_t* buf, size_t bufSize, int flags, void* user
 		return 1;
 	return 0;
 }
+
+int YaraAnalyzer::Scan(const char* filename, int flags, void* userData, int timeout)
+{
+	int result = yr_rules_scan_file(
+		m_Rules,
+		filename,
+		flags,
+		m_Callback,
+		&userData,
+		timeout);
+
+	if (result > 0)
+		return 1;
+	return 0;
+}
+
+YR_RULES* YaraAnalyzer::GetRules() const
+{
+	return m_Rules;
+}
+

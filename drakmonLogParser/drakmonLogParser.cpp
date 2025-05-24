@@ -94,9 +94,16 @@ void drakmonLogParser::AnalyzeProcessTree()
 
 	m_Analyzer->SetCallback(Callback);
 
-	COUNTERS counters{ 0, 0, 0 };
+	COUNTERS counters = { 0,0,0 };
 
-	string line;
+	m_Analyzer->Scan("temp.log", 0, &counters);
+
+	for (auto i = m_Matcher.begin(); i != m_Matcher.end(); i++)
+	{
+		std::cout << "Match at: " << i->first << " count: " << i->second << '\n';
+	}
+
+	/*string line;
 	while (not file.eof())
 	{
 		std::getline(file, line);
@@ -105,7 +112,7 @@ void drakmonLogParser::AnalyzeProcessTree()
 			std::cout << "Error on scanning of the line: " + line + "'!\n";
 			continue;
 		}
-	}
+	}*/
 	file.close();
 }
 
@@ -188,19 +195,32 @@ bool drakmonLogParser::CheckPreInstalled(PreInstalled proc)
 
 int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* messageData, void* userData)
 {
-	const char* filePath = (const char*)userData;
-
-	if (message == CALLBACK_MSG_RULE_MATCHING) {
-		YR_RULE* rule = (YR_RULE*)messageData;
-		std::cout << "Match found in " << filePath << ": " << rule->identifier << std::endl;
-
-		YR_STRING* string;
-		yr_rule_strings_foreach(rule, string) {
-			YR_MATCH* match;
-			yr_string_matches_foreach(context, string, match) {
-				std::cout << "  String: " << string->identifier
-					<< " at offset: 0x" << std::hex << match->offset
-					<< std::dec << std::endl;
+	YR_RULE* actRule = static_cast<YR_RULE*>(messageData);
+	if (!actRule)
+	{
+		return CALLBACK_ERROR;
+	}
+	if (message == CALLBACK_MSG_RULE_MATCHING)
+	{
+		YR_STRING* str;
+		yr_rule_strings_foreach(actRule, str)
+		{
+			if (str)
+			{
+				const char* id = context->rules->rules_table[str->rule_idx].identifier;
+				uint count = context->matches[str->idx].count;
+				if (!m_Matcher.empty() && m_Matcher.contains(id))
+					m_Matcher.at(id) += count;
+				else
+					m_Matcher.insert({ id, count });
+				#ifdef DEBUG
+				yr_string_matches_foreach(context, str, match)
+				{
+					if (match)
+						std::cout << std::string((char*)match->data) << std::endl;
+				}
+				YR_MATCH* match;
+				#endif // DEBUG
 			}
 		}
 	}
