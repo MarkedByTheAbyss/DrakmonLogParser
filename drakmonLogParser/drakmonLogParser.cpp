@@ -5,30 +5,31 @@ void drakmonLogParser::LoadInjectedPID(const json json)
 	uint injectedPID = GetOptVal<uint>(json, "InjectedPid").value_or(-1);
 	m_ProcessTree.SetIntectedPID(injectedPID);
 
-	string FullFilename = GetOptVal<string>(json, "ProcessName").value_or("");
-	uint filenameInd = FullFilename.rfind("\\");
-	string filename = FullFilename.substr(filenameInd + 1);
-	string path = FullFilename.substr(0, filenameInd + 1);
+	string fullFilename = GetOptVal<string>(json, "ProcessName").value_or("");
+	uint filenameInd = fullFilename.rfind("\\");
+	string filename = fullFilename.substr(filenameInd + 1);
+	string path = fullFilename.substr(0, filenameInd + 1);
 
 	Process injectedProc(
 		injectedPID,
 		0,	
 		false,
-		filename,
+		fullFilename,
 		path
 	);
 	m_ProcessTree.Insert(injectedPID, injectedProc);
 }
 
-std::ifstream drakmonLogParser::OpenFile(const string& Filename)
+template<Filestream T> 
+T drakmonLogParser::OpenFile(const string& Filename)
 {
-	std::ifstream file(Filename);
+	T file(Filename);
 	return file;
 }
 
 void drakmonLogParser::LoadPreInstProcs(const string& Filename)
 {
-	std::ifstream file = OpenFile(Filename);
+	std::ifstream file = OpenFile<std::ifstream>(Filename);
 	if (not file.is_open())
 		return;
 
@@ -42,10 +43,14 @@ void drakmonLogParser::LoadPreInstProcs(const string& Filename)
 	file.close();
 }
 
-void drakmonLogParser::FillProcTree(const string& Filename)
+void drakmonLogParser::SortProcesses(const string& Filename)
 {
-	std::ifstream file = OpenFile(Filename);
+	std::ifstream file = OpenFile<std::ifstream>(Filename);
 	if (not file.is_open())
+		return;
+
+	std::ofstream newFile = OpenFile<std::ofstream>("temp.log");
+	if (not newFile.is_open())
 		return;
 
 	string line;
@@ -58,10 +63,12 @@ void drakmonLogParser::FillProcTree(const string& Filename)
 	{
 		std::getline(file, line);
 		json json = Str2Json(line);
-		InsertProcess(json, linenum);
+		if (InsertProcess(json, linenum) == 0)
+			newFile << line + '\n';
 		++linenum;
 	}
 	file.close();
+	newFile.close();
 }
 
 void drakmonLogParser::WriteProcTree()
@@ -70,6 +77,36 @@ void drakmonLogParser::WriteProcTree()
 	{
 		std::cout << "\"PID\":" << elem.first << ' ' << elem.second << std::endl;
 	}
+}
+
+void drakmonLogParser::AnalyzeProcessTree()
+{
+	std::ifstream file = OpenFile<std::ifstream>("temp.log");
+	if (not file.is_open())
+		return;
+
+	m_Analyzer = new YaraAnalyzer();
+	if (m_Analyzer->Initilalize() != 0)
+		return;
+
+	if (m_Analyzer->LoadRules("rules/dropper.yara") != 0)
+		return;
+
+	m_Analyzer->SetCallback(Callback);
+
+	COUNTERS counters{ 0, 0, 0 };
+
+	string line;
+	while (not file.eof())
+	{
+		std::getline(file, line);
+		if (m_Analyzer->Scan((uint8_t*)line.data(), line.length(), 0, &counters, 2) != 0)
+		{
+			std::cout << "Error on scanning of the line: " + line + "'!\n";
+			continue;
+		}
+	}
+	file.close();
 }
 
 json drakmonLogParser::Str2Json(string const Logline) const
@@ -86,35 +123,38 @@ json drakmonLogParser::Str2Json(string const Logline) const
 	return json;
 }
 
-void drakmonLogParser::InsertProcess(json const json, const uint linenum)
+int drakmonLogParser::InsertProcess(json const json, const uint linenum)
 {
 	try
 	{
-		uint PPID = GetOptVal<uint>(json, "PPID").value_or(-1);
-		Process* parent = m_ProcessTree.GetProcess(PPID);
+		uint pid = GetOptVal<uint>(json, "PID").value_or(-1);
+		if (m_ProcessTree.Contains(pid))
+			return 0;
+
+		uint ppid = GetOptVal<uint>(json, "PPID").value_or(-1);
+		Process* parent = m_ProcessTree.GetProcess(ppid);
 		if (parent == nullptr || parent->GetIsPreInstalled() == true)
-			return;
+			return 1;
+
 		parent->AppendChild(GetOptVal<uint>(json, "PID").value_or(-1));
-
-		uint PID = GetOptVal<uint>(json, "PID").value_or(-1);
-
-		string FullFilename = GetOptVal<string>(json, "ProcessName").value_or("");
-		uint filenameInd = FullFilename.rfind("\\");
-		string filename = FullFilename.substr(filenameInd + 1);
-		string path = FullFilename.substr(0, filenameInd + 1);
+		string fullFilename = GetOptVal<string>(json, "ProcessName").value_or("");
+		uint filenameInd = fullFilename.rfind("\\");
+		string filename = fullFilename.substr(filenameInd + 1);
+		string path = fullFilename.substr(0, filenameInd + 1);
 
 		Process newProc(
-			PPID,
+			ppid,
 			linenum,
-			CheckPreInstalled({ PID, filename, path }),
+			CheckPreInstalled({ pid, filename, path }),
 			filename,
 			path
 		);
-		m_ProcessTree.Insert(PID, newProc);
+		m_ProcessTree.Insert(pid, newProc);
+		return 0;
 	}
 	catch (json::exception& e)
 	{
-		return;
+		return 2;
 	}
 }
 
@@ -144,4 +184,26 @@ bool drakmonLogParser::CheckPreInstalled(PreInstalled proc)
 			return true;
 	}
 	return false;
+}
+
+int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* messageData, void* userData)
+{
+	const char* filePath = (const char*)userData;
+
+	if (message == CALLBACK_MSG_RULE_MATCHING) {
+		YR_RULE* rule = (YR_RULE*)messageData;
+		std::cout << "Match found in " << filePath << ": " << rule->identifier << std::endl;
+
+		YR_STRING* string;
+		yr_rule_strings_foreach(rule, string) {
+			YR_MATCH* match;
+			yr_string_matches_foreach(context, string, match) {
+				std::cout << "  String: " << string->identifier
+					<< " at offset: 0x" << std::hex << match->offset
+					<< std::dec << std::endl;
+			}
+		}
+	}
+
+	return CALLBACK_CONTINUE;
 }

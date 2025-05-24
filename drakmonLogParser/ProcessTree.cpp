@@ -45,6 +45,11 @@ void ProcessTree::Insert(uint ParentPID, Process NewNode)
 	this->m_Map.insert({ ParentPID, NewNode });
 }
 
+bool ProcessTree::Contains(const uint& pid) const
+{
+	return this->m_Map.contains(pid);
+}
+
 Process* ProcessTree::GetProcess(uint PID)
 {
 	if (m_Map.find(PID) != m_Map.end())

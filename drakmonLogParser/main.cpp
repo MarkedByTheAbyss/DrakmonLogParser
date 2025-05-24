@@ -6,10 +6,22 @@
 
 int main()
 {
+    time_t start = time(nullptr);
+    
     drakmonLogParser* aboba = new drakmonLogParser();
     aboba->LoadPreInstProcs("preinst.json");
-    aboba->FillProcTree("drakmon.log");
-    aboba->WriteProcTree();
+    aboba->SortProcesses("2ba1ab51-d1d6-47d3-a911-a3583b1dba91_drakmon.log");
+    time_t end = time(nullptr);
+    std::cout << "\n\Process tree built, procesess sorted into new file.\n";
+    std::cout << "\n\tWork time: " << end - start << " seconds!\n" << std::endl;
+
+    start = end;
+    aboba->AnalyzeProcessTree();
+    end = time(nullptr);
+    std::cout << "\n\Process tree analysis complete.\n";
+    std::cout << "\n\tWork time: " << end - start << " seconds!\n" << std::endl;
+
+    //aboba->WriteProcTree();
     return 0;
 }
 
