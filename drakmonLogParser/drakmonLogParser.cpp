@@ -102,17 +102,6 @@ void drakmonLogParser::AnalyzeProcessTree()
 	{
 		std::cout << "Match at: " << i->first << " count: " << i->second << '\n';
 	}
-
-	/*string line;
-	while (not file.eof())
-	{
-		std::getline(file, line);
-		if (m_Analyzer->Scan((uint8_t*)line.data(), line.length(), 0, &counters, 2) != 0)
-		{
-			std::cout << "Error on scanning of the line: " + line + "'!\n";
-			continue;
-		}
-	}*/
 	file.close();
 }
 
@@ -207,20 +196,34 @@ int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* mess
 		{
 			if (str)
 			{
-				const char* id = context->rules->rules_table[str->rule_idx].identifier;
+				YR_RULE* curRule = &context->rules->rules_table[str->rule_idx];
+				const char* id = curRule->identifier;
 				uint count = context->matches[str->idx].count;
 				if (!m_Matcher.empty() && m_Matcher.contains(id))
 					m_Matcher.at(id) += count;
 				else
 					m_Matcher.insert({ id, count });
-				#ifdef DEBUG
-				yr_string_matches_foreach(context, str, match)
+				const char* tag;
+				yr_rule_tags_foreach(curRule, tag)
 				{
-					if (match)
-						std::cout << std::string((char*)match->data) << std::endl;
+					switch (STRHASH(tag))
+					{
+					case STRHASH("URL"):
+						Functions::GetUrls(context, str);
+						break;
+
+					case STRHASH("IP"):
+						Functions::GetIps(context, str);
+						break;
+
+					case STRHASH("PreInst"):
+						std::cout << "Found PreInst tag!\n";
+						break;
+
+					default:
+						break;
+					}
 				}
-				YR_MATCH* match;
-				#endif // DEBUG
 			}
 		}
 	}

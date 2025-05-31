@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="drakmonLogParser.h" />
+    <ClInclude Include="functions.cpp" />
     <ClInclude Include="inc\yara.h" />
     <ClInclude Include="json.hpp" />
     <ClInclude Include="ProcessTree.h" />

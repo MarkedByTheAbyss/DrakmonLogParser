@@ -1,0 +1,73 @@
+#pragma once;
+#include <regex>
+#include <yara/rules.h>
+
+#include "json.hpp"
+
+#define STRHASH Functions::fnv1a_32
+using json = nlohmann::json;
+
+
+class Functions
+{
+public:
+
+	static constexpr unsigned int fnv1a_32(const char* str, unsigned int hash = 2166136261)
+	{
+		for (; *str; ++str) {
+			hash = (hash ^ static_cast<unsigned int>(*str)) * 16777619;
+		}
+		return hash;
+	}
+
+	static int AddToRecord(std::string info, std::string data)
+	{
+		static FILE* recordFile;
+		if (!recordFile)
+			fopen_s(&recordFile, "record.log", "w+");
+		string fullString = info + data + '\n';
+		fwrite(fullString.data(), fullString.length(), 1, recordFile);
+		return 0;
+	}
+
+	static void GetUrls(YR_SCAN_CONTEXT* context, YR_STRING* str)
+	{
+		YR_MATCH* yrMatch;
+		yr_string_matches_foreach(context, str, yrMatch)
+		{
+			if (yrMatch)
+			{
+				std::string curString((char*)yrMatch->data);
+				int offset = curString.find("Arguments\":") + strlen("Arguments\":");
+				curString = curString.substr(offset, yrMatch->match_length);
+				const char* regex = R"((http(s?):\/\/)?[a-zA-Z0-9\.\-_]+(\.[a-zA-Z]{2,6})+(\/[a-zA-Z0-9_\-\.\/\?\%\#\&\=]*)?)";
+				std::regex reg(regex);
+				std::smatch match;
+				if (std::regex_search(curString, match, reg))
+				{
+					AddToRecord("URL: ", match.str());
+				}
+			}
+
+		}
+	}
+
+	static void GetIps(YR_SCAN_CONTEXT* context, YR_STRING* str)
+	{
+		YR_MATCH* yrMatch;
+		yr_string_matches_foreach(context, str, yrMatch)
+		{
+			if (yrMatch)
+			{
+				std::string curString((char*)yrMatch->data);
+				const char* regex = R"(((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4})";
+				std::regex reg(regex);
+				std::smatch match;
+				if (std::regex_search(curString, match, reg))
+				{
+					AddToRecord("IP: ", match.str());
+				}
+			}
+		}
+	}
+};

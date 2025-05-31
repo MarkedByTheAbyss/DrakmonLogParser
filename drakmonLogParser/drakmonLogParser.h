@@ -6,6 +6,7 @@
 #include "json.hpp"
 #include "ProcessTree.h"
 #include "YaraAnalyzer.h"
+#include "functions.cpp"
 
 using json = nlohmann::json;
 
