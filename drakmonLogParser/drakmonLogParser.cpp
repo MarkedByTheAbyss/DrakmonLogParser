@@ -94,15 +94,20 @@ void drakmonLogParser::AnalyzeProcessTree()
 
 	m_Analyzer->SetCallback(Callback);
 
-	COUNTERS counters = { 0,0,0 };
+	Functions::CallbackData userData;
 
-	m_Analyzer->Scan("temp.log", 0, &counters);
+	m_Analyzer->Scan("temp.log", 0, &userData);
 
 	for (auto i = m_Matcher.begin(); i != m_Matcher.end(); i++)
 	{
 		std::cout << "Match at: " << i->first << " count: " << i->second << '\n';
 	}
+
+	FormRecord(&userData);
+	LogFileMatches();
+
 	file.close();
+	return;
 }
 
 json drakmonLogParser::Str2Json(string const Logline) const
@@ -182,6 +187,43 @@ bool drakmonLogParser::CheckPreInstalled(PreInstalled proc)
 	return false;
 }
 
+int drakmonLogParser::FormRecord(Functions::CallbackData* data)
+{
+	std::ofstream file = OpenFile<std::ofstream>("record.json");
+	if (!file.is_open())
+		return 1;
+
+	json resJson;
+	for (auto elem : *data)
+	{
+		json parentJson, childJson = json::array();
+		const string& key = elem.first;
+		const std::vector<string>& values = elem.second;
+		for (const auto& value : values)
+		{
+			childJson.insert(childJson.end(), value);
+		}
+		parentJson = { key, childJson };
+		resJson.emplace(parentJson);
+	}
+	file << resJson;
+
+	file.close();
+	return 0;
+}
+
+int drakmonLogParser::LogFileMatches()
+{
+	std::ofstream file = OpenFile<std::ofstream>("ruleMatches.json");
+	if (!file.is_open())
+		return 1;
+
+	file << ruleMatches;
+
+	file.close();
+	return 0;
+}
+
 int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* messageData, void* userData)
 {
 	YR_RULE* actRule = static_cast<YR_RULE*>(messageData);
@@ -191,39 +233,50 @@ int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* mess
 	}
 	if (message == CALLBACK_MSG_RULE_MATCHING)
 	{
+		Functions::CallbackData* callbackData = static_cast<Functions::CallbackData*>(userData);
 		YR_STRING* str;
 		yr_rule_strings_foreach(actRule, str)
 		{
 			if (str)
 			{
 				YR_RULE* curRule = &context->rules->rules_table[str->rule_idx];
-				const char* id = curRule->identifier;
+				const char* ruleId = curRule->identifier;
+				const char* strId = str->identifier;
 				uint count = context->matches[str->idx].count;
-				if (!m_Matcher.empty() && m_Matcher.contains(id))
-					m_Matcher.at(id) += count;
+				
+				json ruleString = { { "string", strId }, { "count", count } };
+
+				if (!m_Matcher.empty() && m_Matcher.contains(ruleId))
+					m_Matcher.at(ruleId) += count;
 				else
-					m_Matcher.insert({ id, count });
+					m_Matcher.insert({ ruleId, { count } });
 				const char* tag;
 				yr_rule_tags_foreach(curRule, tag)
 				{
+					json matches;
 					switch (STRHASH(tag))
 					{
 					case STRHASH("URL"):
-						Functions::GetUrls(context, str);
+						Functions::GetUrls(context, str, callbackData);
 						break;
 
 					case STRHASH("IP"):
-						Functions::GetIps(context, str);
+						Functions::GetIps(context, str, callbackData);
 						break;
 
-					case STRHASH("PreInst"):
-						std::cout << "Found PreInst tag!\n";
+					case STRHASH("SaveMatch"):
+						matches = Functions::GetMatchJson(context, str);
+						ruleString["matches"] = matches;
 						break;
 
 					default:
 						break;
 					}
 				}
+				if (ruleMatches.contains(ruleId))
+					ruleMatches[ruleId].push_back(ruleString);
+				else
+					ruleMatches[ruleId] = json::array({ ruleString });
 			}
 		}
 	}

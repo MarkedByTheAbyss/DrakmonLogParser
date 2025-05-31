@@ -1,4 +1,4 @@
-rule CreateFileExe 
+rule CreateFileExe : SaveMatch
 {
     strings:
         $NtCreateExeFileSysWOW = /NtCreateFile.{50,200}SysWOW64.{5,50}[0-9a-zA-Z]\.exe/
@@ -629,7 +629,7 @@ rule InternetConnect : URL
         any of them
 }
 
-rule BitBltFullScrean
+rule BitBltFullScrean 
 {
     strings:
         $GdiBitBlt =  /GdiBitBlt.*"x":"0x0","y":"0x0","cx":"0x400.*cy":"0x300/

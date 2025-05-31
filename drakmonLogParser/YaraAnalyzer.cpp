@@ -78,7 +78,7 @@ int YaraAnalyzer::Scan(const char* filename, int flags, void* userData, int time
 		filename,
 		flags,
 		m_Callback,
-		&userData,
+		userData,
 		timeout);
 
 	if (result > 0)

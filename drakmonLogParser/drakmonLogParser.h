@@ -15,19 +15,13 @@ concept Filestream = std::is_base_of<std::ios, T>::value;
 
 typedef std::map<const char*, uint> RuleMatches;
 static RuleMatches m_Matcher;
+static json ruleMatches;
 
 struct PreInstalled
 {
 	uint PID;
 	string Name;
 	string Path;
-};
-
-struct COUNTERS
-{
-	int rules_matching;
-	int rules_not_matching;
-	int rules_warning;
 };
 
 class drakmonLogParser 
@@ -53,6 +47,8 @@ protected:
 	int InsertProcess(json const Json, const uint linenum);
 	void InsertPreInstProcess(json const Json);
 	bool CheckPreInstalled(PreInstalled proc);
+	int FormRecord(Functions::CallbackData* data);
+	int LogFileMatches();
 	static int Callback(YR_SCAN_CONTEXT* context, int message, void* messageData, void* userData);
 
 	template<Filestream T> 

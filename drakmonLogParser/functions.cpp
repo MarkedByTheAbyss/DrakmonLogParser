@@ -11,6 +11,9 @@ using json = nlohmann::json;
 class Functions
 {
 public:
+	typedef std::map<std::string, std::vector<string>> CallbackData;
+
+public:
 
 	static constexpr unsigned int fnv1a_32(const char* str, unsigned int hash = 2166136261)
 	{
@@ -20,17 +23,15 @@ public:
 		return hash;
 	}
 
-	static int AddToRecord(std::string info, std::string data)
+	static void AddToRecord(string key, string value, CallbackData* callbackData)
 	{
-		static FILE* recordFile;
-		if (!recordFile)
-			fopen_s(&recordFile, "record.log", "w+");
-		string fullString = info + data + '\n';
-		fwrite(fullString.data(), fullString.length(), 1, recordFile);
-		return 0;
+		if (!callbackData->empty() && callbackData->contains(key))
+			callbackData->at(key).push_back(value);
+		else
+			callbackData->insert({ key, { value } });
 	}
 
-	static void GetUrls(YR_SCAN_CONTEXT* context, YR_STRING* str)
+	static void GetUrls(YR_SCAN_CONTEXT* context, YR_STRING* str, CallbackData* callbackData)
 	{
 		YR_MATCH* yrMatch;
 		yr_string_matches_foreach(context, str, yrMatch)
@@ -45,14 +46,13 @@ public:
 				std::smatch match;
 				if (std::regex_search(curString, match, reg))
 				{
-					AddToRecord("URL: ", match.str());
+					AddToRecord("URL", match.str(), callbackData);
 				}
 			}
-
 		}
 	}
 
-	static void GetIps(YR_SCAN_CONTEXT* context, YR_STRING* str)
+	static void GetIps(YR_SCAN_CONTEXT* context, YR_STRING* str, CallbackData* callbackData)
 	{
 		YR_MATCH* yrMatch;
 		yr_string_matches_foreach(context, str, yrMatch)
@@ -65,9 +65,22 @@ public:
 				std::smatch match;
 				if (std::regex_search(curString, match, reg))
 				{
-					AddToRecord("IP: ", match.str());
+					AddToRecord("IP", match.str(), callbackData);
 				}
 			}
 		}
+	}
+
+	static json GetMatchJson(YR_SCAN_CONTEXT* context, YR_STRING* str)
+	{
+		json matches = json::array();
+		YR_MATCH* yrMatch;
+		yr_string_matches_foreach(context, str, yrMatch)
+		{
+			std::string curString((char*)yrMatch->data);
+			matches.insert(matches.end(), curString);
+		}
+		
+		return json::array({ matches });
 	}
 };

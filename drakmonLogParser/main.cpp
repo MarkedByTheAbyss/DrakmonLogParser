@@ -9,8 +9,8 @@ int main()
     time_t start = time(nullptr);
     
     drakmonLogParser* parser = new drakmonLogParser();
-    parser->LoadPreInstProcs("preinst.json");
-    parser->SortProcesses("2ba1ab51-d1d6-47d3-a911-a3583b1dba91_drakmon.log");
+    //parser->LoadPreInstProcs("preinst.json");
+    //parser->SortProcesses("2ba1ab51-d1d6-47d3-a911-a3583b1dba91_drakmon.log");
     time_t end = time(nullptr);
     std::cout << "\nProcess tree built, procesess sorted into new file.";
     std::cout << "\nWork time: " << end - start << " seconds!\n" << std::endl;
