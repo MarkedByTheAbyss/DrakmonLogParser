@@ -3,14 +3,16 @@
 
 #include <iostream>
 #include "drakmonLogParser.h"
+#include "ArgParser.h"
 
-int main()
+int StartParser(drakmonLogParser* parser)
 {
     time_t start = time(nullptr);
-    
-    drakmonLogParser* parser = new drakmonLogParser();
-    parser->LoadPreInstProcs("preinst.json");
-    parser->SortProcesses("2ba1ab51-d1d6-47d3-a911-a3583b1dba91_drakmon.log");
+    parser->LoadPreInstProcs();
+    //parser->LoadPreInstProcs("preinst.json");
+    parser->SortProcesses();
+    //parser->SortProcesses("2ba1ab51-d1d6-47d3-a911-a3583b1dba91_drakmon.log");
+
     time_t end = time(nullptr);
     std::cout << "\nProcess tree built, procesess sorted into new file.";
     std::cout << "\nWork time: " << end - start << " seconds!\n" << std::endl;
@@ -20,8 +22,55 @@ int main()
     end = time(nullptr);
     std::cout << "\nProcess tree analysis complete.";
     std::cout << "\nWork time: " << end - start << " seconds!\n" << std::endl;
+    return 0;
+}
 
-    //aboba->WriteProcTree();
+int SetArgs(drakmonLogParser* logParser, ArgParser* argParser)
+{
+    if (argParser->Contains("-preinstPath"))
+        logParser->SetPreinstPath(argParser->Get("-preinstPath"));
+    if (argParser->Contains("-logPath"))
+        logParser->SetLogPath(argParser->Get("-logPath"));
+    if (argParser->Contains("-recordDir"))
+        logParser->SetRecordDirPath(argParser->Get("-recordDir"));
+    if (argParser->Contains("-rulesPath"))
+        logParser->SetRulesPath(argParser->Get("-rulesPath"));
+
+    return 0;
+}
+
+void ShowHelp()
+{
+    std::cout << "-h (--help, -help) - Show help" << std::endl;
+    std::cout << "-preinstPath - path to json file with preinstalled processes (PID, ProcessName, Path)" << std::endl;
+    std::cout << "-logPath - path to drakmon log" << std::endl;
+    std::cout << "-recordDir - path to dir where records will be created" << std::endl;
+    std::cout << "-rulesPath - path to YARA rules file (must end with \\\\ or /)" << std::endl;
+    std::cout << "Created by Deniska and BoBaH" << std::endl;
+
+}
+
+int main(int argc, char** argv)
+{
+    ArgParser* argParser = new ArgParser();
+    drakmonLogParser* logParser = new drakmonLogParser();
+
+    for (int i = 0; i < argc; i++)
+    {
+        string curArg(argv[i]);
+        argParser->Insert(curArg);
+    }
+
+    if (argParser->IsHelp())
+    {
+        ShowHelp();
+    }
+    else
+    {
+        SetArgs(logParser, argParser);
+        StartParser(logParser);
+    }
+
     return 0;
 }
 

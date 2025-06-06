@@ -27,6 +27,9 @@
     <ClCompile Include="YaraAnalyzer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="ArgParser.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="drakmonLogParser.h">
@@ -46,6 +49,9 @@
     </ClInclude>
     <ClInclude Include="functions.cpp">
       <Filter>Исходные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="ArgParser.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

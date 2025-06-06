@@ -27,9 +27,9 @@ T drakmonLogParser::OpenFile(const string& Filename)
 	return file;
 }
 
-void drakmonLogParser::LoadPreInstProcs(const string& Filename)
+void drakmonLogParser::LoadPreInstProcs()
 {
-	std::ifstream file = OpenFile<std::ifstream>(Filename);
+	std::ifstream file = OpenFile<std::ifstream>(m_PreinstPath);
 	if (not file.is_open())
 		return;
 
@@ -43,14 +43,14 @@ void drakmonLogParser::LoadPreInstProcs(const string& Filename)
 	file.close();
 }
 
-void drakmonLogParser::SortProcesses(const string& Filename)
+void drakmonLogParser::SortProcesses()
 {
-	std::ifstream file = OpenFile<std::ifstream>(Filename);
+	std::ifstream file = OpenFile<std::ifstream>(m_LogPath);
 	if (not file.is_open())
 		return;
 
-	std::ofstream newFile = OpenFile<std::ofstream>("temp.log");
-	if (not newFile.is_open())
+	std::ofstream sortedLogFile = OpenFile<std::ofstream>("temp.log");
+	if (not sortedLogFile.is_open())
 		return;
 
 	string line;
@@ -64,11 +64,11 @@ void drakmonLogParser::SortProcesses(const string& Filename)
 		std::getline(file, line);
 		json json = Str2Json(line);
 		if (InsertProcess(json, linenum) == 0)
-			newFile << line + '\n';
+			sortedLogFile << line + '\n';
 		++linenum;
 	}
 	file.close();
-	newFile.close();
+	sortedLogFile.close();
 }
 
 void drakmonLogParser::WriteProcTree()
@@ -81,15 +81,16 @@ void drakmonLogParser::WriteProcTree()
 
 void drakmonLogParser::AnalyzeProcessTree()
 {
-	std::ifstream file = OpenFile<std::ifstream>("temp.log");
-	if (not file.is_open())
+	std::ifstream sortedLogFile = OpenFile<std::ifstream>("temp.log");
+	if (not sortedLogFile.is_open())
 		return;
 
 	m_Analyzer = new YaraAnalyzer();
 	if (m_Analyzer->Initilalize() != 0)
 		return;
 
-	if (m_Analyzer->LoadRules("rules/dropper.yara") != 0)
+	//if (m_Analyzer->LoadRules("rules/dropper.yara") != 0)
+	if (m_Analyzer->LoadRules(m_RulesPath.data()) != 0)
 		return;
 
 	m_Analyzer->SetCallback(Callback);
@@ -106,7 +107,8 @@ void drakmonLogParser::AnalyzeProcessTree()
 	FormRecord(&userData);
 	LogFileMatches();
 
-	file.close();
+	sortedLogFile.close();
+	std::remove("temp.log");
 	return;
 }
 
@@ -189,7 +191,10 @@ bool drakmonLogParser::CheckPreInstalled(PreInstalled proc)
 
 int drakmonLogParser::FormRecord(Functions::CallbackData* data)
 {
-	std::ofstream file = OpenFile<std::ofstream>("record.json");
+	if (!std::filesystem::is_directory(m_RecordDirPath))
+		std::filesystem::create_directories(m_RecordDirPath);
+
+	std::ofstream file = OpenFile<std::ofstream>(m_RecordDirPath + "record.json");
 	if (!file.is_open())
 		return 1;
 
@@ -214,7 +219,7 @@ int drakmonLogParser::FormRecord(Functions::CallbackData* data)
 
 int drakmonLogParser::LogFileMatches()
 {
-	std::ofstream file = OpenFile<std::ofstream>("ruleMatches.json");
+	std::ofstream file = OpenFile<std::ofstream>(m_RecordDirPath + "ruleMatches.json");
 	if (!file.is_open())
 		return 1;
 
@@ -253,7 +258,6 @@ int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* mess
 				const char* tag;
 				yr_rule_tags_foreach(curRule, tag)
 				{
-					json matches;
 					switch (STRHASH(tag))
 					{
 					case STRHASH("URL"):
@@ -265,8 +269,7 @@ int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* mess
 						break;
 
 					case STRHASH("SaveMatch"):
-						matches = Functions::GetMatchJson(context, str);
-						ruleString["matches"] = matches;
+						ruleString["matches"] = Functions::GetMatchJson(context, str);
 						break;
 
 					default:
@@ -282,4 +285,24 @@ int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* mess
 	}
 
 	return CALLBACK_CONTINUE;
+}
+
+void drakmonLogParser::SetPreinstPath(const std::string path)
+{
+	m_PreinstPath = path;
+}
+
+void drakmonLogParser::SetLogPath(const std::string path)
+{
+	m_LogPath = path;
+}
+
+void drakmonLogParser::SetRecordDirPath(const std::string path)
+{
+	m_RecordDirPath = path;
+}
+
+void drakmonLogParser::SetRulesPath(const std::string path)
+{
+	m_RulesPath = path;
 }

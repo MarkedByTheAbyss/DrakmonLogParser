@@ -1,6 +1,7 @@
 #pragma once
 #include <fstream>
 #include <optional>
+#include <filesystem>
 #include <yara/rules.h>
 
 #include "json.hpp"
@@ -35,10 +36,15 @@ public:
 	drakmonLogParser() = default;
 	~drakmonLogParser() = default;
 
-	void LoadPreInstProcs(const string& Filename);
-	void SortProcesses(const string& Filename);
+	void LoadPreInstProcs();
+	void SortProcesses();
 	void WriteProcTree();
 	void AnalyzeProcessTree();
+
+	void SetPreinstPath(const std::string path);
+	void SetLogPath(const std::string path);
+	void SetRecordDirPath(const std::string path);
+	void SetRulesPath(const std::string path);
 	
 protected:
 
@@ -62,6 +68,11 @@ protected:
 	ProcessTree m_ProcessTree;
 	PreInstalledProcs m_PreInstProcs;
 	YaraAnalyzer* m_Analyzer;
+
+	string m_PreinstPath;
+	string m_LogPath;
+	string m_RecordDirPath;
+	string m_RulesPath;
 
 };
 
