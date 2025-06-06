@@ -41,12 +41,12 @@ int SetArgs(drakmonLogParser* logParser, ArgParser* argParser)
 
 void ShowHelp()
 {
-    std::cout << "-h (--help, -help) - Show help" << std::endl;
-    std::cout << "-preinstPath - path to json file with preinstalled processes (PID, ProcessName, Path)" << std::endl;
-    std::cout << "-logPath - path to drakmon log" << std::endl;
-    std::cout << "-recordDir - path to dir where records will be created" << std::endl;
-    std::cout << "-rulesPath - path to YARA rules file (must end with \\\\ or /)" << std::endl;
-    std::cout << "Created by Deniska and BoBaH" << std::endl;
+    std::cout << "\t-h (--help, -help) - Show help" << std::endl;
+    std::cout << "\t-preinstPath - path to json file with preinstalled processes (PID, ProcessName, Path)" << std::endl;
+    std::cout << "\t-logPath - path to drakmon log" << std::endl;
+    std::cout << "\t-recordDir - path to dir where records will be created" << std::endl;
+    std::cout << "\t-rulesPath - path to YARA rules file (must end with \\\\ or /)" << std::endl;
+    std::cout << "\tCreated by Deniska and BoBaH" << std::endl;
 
 }
 

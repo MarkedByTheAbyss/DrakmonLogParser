@@ -18,6 +18,7 @@ void ArgParser::Insert(std::string argument)
 	std::string key = argument.substr(0, splitInd);
 	std::string value = argument.substr(splitInd + 1);
 	m_ArgMap.insert({ key,value });
+	CheckHelp(key);
 }
 
 bool ArgParser::IsHelp() const
