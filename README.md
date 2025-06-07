@@ -90,3 +90,9 @@
 drakmonLogParser.exe -logPath=c:\work\testcase\drakmon.log -preinstPath=e:\GitRepos\drakmonLogParser\DrakmonLogParser\preinst\preinst.json -recordDir=e:\GitRepos\drakmonLogParser\DrakmonLogParser\records\ -rulesPath=e:\GitRepos\drakmonLogParser\DrakmonLogParser\rules\dropper.yara
 
 drakmonLogParser.exe -logPath=c:\work\testcase\drakmon.log -preinstPath=e:\GitRepos\drakmonLogParser\DrakmonLogParser\preinst\preinst.json -recordDir=e:\GitRepos\drakmonLogParser\DrakmonLogParser\records\ -rulesPath=e:\GitRepos\drakmonLogParser\DrakmonLogParser\rules\CommonAPIMonitoring.yara
+
+./app.exe -logPath=/home/aboba/build/DrakmonLogParser/testcase/drakmon.log -preinstPath=/home/aboba/build/DrakmonLogParser/preinst/preinst.json -recordDir=/home/aboba/build/DrakmonLogParser/records/ -rulesPath=/home/aboba/build/DrakmonLogParser/rules/dropper.yara
+
+Текущие проблемы:
+При компиляции на Ubuntu 22.04 были проблемы с yaralib (ошибки при компиляции правил и пропавшая функция yr_set_configuration_uint32)
+Также скомпилированное приложение на Ubuntu работает гораздо медленнее (~в 5 раз)

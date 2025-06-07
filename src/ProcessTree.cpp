@@ -57,12 +57,12 @@ Process* ProcessTree::GetProcess(uint PID)
 	return nullptr;
 }
 
-void ProcessTree::SetIntectedPID(uint PID)
+void ProcessTree::SetInjectedPID(uint PID)
 {
 	this->m_InjectPID = PID;
 }
 
-uint ProcessTree::GetIntectedPID(uint PID) const
+uint ProcessTree::GetInjectedPID(uint PID) const
 {
 	return m_InjectPID;
 }

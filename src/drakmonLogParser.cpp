@@ -3,7 +3,7 @@
 void drakmonLogParser::LoadInjectedPID(const json json)
 {
 	uint injectedPID = GetOptVal<uint>(json, "InjectedPid").value_or(-1);
-	m_ProcessTree.SetIntectedPID(injectedPID);
+	m_ProcessTree.SetInjectedPID(injectedPID);
 
 	string fullFilename = GetOptVal<string>(json, "ProcessName").value_or("");
 	uint filenameInd = fullFilename.rfind("\\");
