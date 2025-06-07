@@ -12,7 +12,7 @@ public:
 
 public:
 
-	YaraAnalyzer() : m_Rules(nullptr) {};
+	YaraAnalyzer() : m_Rules(nullptr), m_Callback(nullptr) {};
 	~YaraAnalyzer();
 	int Initilalize();
 	void SetCallback(YR_CALLBACK_FUNC func);

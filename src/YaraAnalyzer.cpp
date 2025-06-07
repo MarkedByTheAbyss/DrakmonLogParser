@@ -15,8 +15,8 @@ int YaraAnalyzer::Initilalize()
 		return 1;
 	}
 	return 0;
+	YR_CONFIG_MAX_MATCH_DATA;
 }
-
 void YaraAnalyzer::SetCallback(YR_CALLBACK_FUNC func)
 {
 	m_Callback = func;
@@ -63,7 +63,7 @@ int YaraAnalyzer::Scan(const uint8_t* buf, size_t bufSize, int flags, void* user
 		bufSize,
 		flags,
 		m_Callback,
-		&userData,
+		userData,
 		timeout);
 
 	if (result > 0)
@@ -73,6 +73,8 @@ int YaraAnalyzer::Scan(const uint8_t* buf, size_t bufSize, int flags, void* user
 
 int YaraAnalyzer::Scan(const char* filename, int flags, void* userData, int timeout)
 {
+	yr_set_configuration_uint32(YR_CONFIG_MAX_MATCH_DATA, 1024);
+
 	int result = yr_rules_scan_file(
 		m_Rules,
 		filename,

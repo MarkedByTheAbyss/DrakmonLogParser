@@ -84,7 +84,7 @@ void drakmonLogParser::AnalyzeProcessTree()
 	std::ifstream sortedLogFile = OpenFile<std::ifstream>("temp.log");
 	if (not sortedLogFile.is_open())
 		return;
-
+	
 	m_Analyzer = new YaraAnalyzer();
 	if (m_Analyzer->Initilalize() != 0)
 		return;

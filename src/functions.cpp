@@ -11,7 +11,7 @@ using json = nlohmann::json;
 class Functions
 {
 public:
-	typedef std::map<std::string, std::vector<string>> CallbackData;
+	typedef std::map<std::string, std::vector<std::string>> CallbackData;
 
 public:
 
@@ -23,7 +23,7 @@ public:
 		return hash;
 	}
 
-	static void AddToRecord(string key, string value, CallbackData* callbackData)
+	static void AddToRecord(std::string key, std::string value, CallbackData* callbackData)
 	{
 		if (!callbackData->empty() && callbackData->contains(key))
 			callbackData->at(key).push_back(value);
@@ -74,11 +74,15 @@ public:
 	static json GetMatchJson(YR_SCAN_CONTEXT* context, YR_STRING* str)
 	{
 		json matches = json::array();
+		
 		YR_MATCH* yrMatch;
 		yr_string_matches_foreach(context, str, yrMatch)
 		{
 			std::string curString((char*)yrMatch->data);
-			matches.insert(matches.end(), curString);
+			curString.insert(0, "{");
+
+			json curJson = json::parse(curString);
+			matches.insert(matches.end(), curJson);
 		}
 		
 		return json::array({ matches });
