@@ -31,7 +31,7 @@ int YaraAnalyzer::LoadRules(const char* filename, YR_COMPILER* compiler, bool de
 
 #if defined(_WIN32) || defined (_WIN64)
 	fopen_s(&file, filename, "r");
-#elif 
+#else
 	file = fopen(filename, "r");
 #endif 
 
