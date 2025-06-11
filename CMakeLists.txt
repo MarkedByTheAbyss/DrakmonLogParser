@@ -32,8 +32,8 @@ if(WIN32)
     target_compile_options(app PRIVATE /W4 /EHsc)
 else()
     # Unix-specific settings
-    find_library(YARA_LIB yara REQUIRED)
-    target_link_libraries(app PRIVATE ${YARA_LIB})
+    target_link_libraries(app PRIVATE ${CMAKE_SOURCE_DIR}/lib/libyara.a)
+    target_link_libraries(app PRIVATE ${CMAKE_SOURCE_DIR}/lib/libyara.so)
     # Например, для GCC/Clang
     target_compile_options(app PRIVATE -Wall -Wextra -pedantic)
 endif()
