@@ -11,7 +11,7 @@ using json = nlohmann::json;
 class Functions
 {
 public:
-	typedef std::map<std::string, std::vector<string>> CallbackData;
+	typedef std::map<std::string, std::vector<std::string>> CallbackData;
 
 public:
 
@@ -23,7 +23,7 @@ public:
 		return hash;
 	}
 
-	static void AddToRecord(string key, string value, CallbackData* callbackData)
+	static void AddToRecord(std::string key, std::string value, CallbackData* callbackData)
 	{
 		if (!callbackData->empty() && callbackData->contains(key))
 			callbackData->at(key).push_back(value);

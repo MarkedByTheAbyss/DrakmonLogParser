@@ -1,5 +1,5 @@
 ﻿// drakmonLogParser.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-//
+// 
 
 #include <iostream>
 #include "drakmonLogParser.h"
@@ -9,9 +9,7 @@ int StartParser(drakmonLogParser* parser)
 {
     time_t start = time(nullptr);
     parser->LoadPreInstProcs();
-    //parser->LoadPreInstProcs("preinst.json");
     parser->SortProcesses();
-    //parser->SortProcesses("2ba1ab51-d1d6-47d3-a911-a3583b1dba91_drakmon.log");
 
     time_t end = time(nullptr);
     std::cout << "\nProcess tree built, procesess sorted into new file.";

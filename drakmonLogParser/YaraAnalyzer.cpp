@@ -1,4 +1,7 @@
 #include "YaraAnalyzer.h"
+#ifndef ERROR_SUCCESS
+#define ERROR_SUCCESS 0L
+#endif
 
 YaraAnalyzer::~YaraAnalyzer()
 {
@@ -25,7 +28,11 @@ void YaraAnalyzer::SetCallback(YR_CALLBACK_FUNC func)
 int YaraAnalyzer::LoadRules(const char* filename, YR_COMPILER* compiler, bool destroy)
 {
 	FILE* file;
+#if defined(_WIN32) || defined (_WIN64)
 	fopen_s(&file, filename, "r");
+#else
+	file = fopen(filename, "r");
+#endif
 	if (!file)
 		return 1;
 
