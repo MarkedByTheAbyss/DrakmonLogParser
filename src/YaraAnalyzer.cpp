@@ -15,6 +15,7 @@ int YaraAnalyzer::Initilalize()
 	if (yr_initialize() != ERROR_SUCCESS)
 	{
 		std::cout << "YARA initialization failed\n";
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		return 1;
 	}
 	return 0;
@@ -36,15 +37,24 @@ int YaraAnalyzer::LoadRules(const char* filename, YR_COMPILER* compiler, bool de
 #endif 
 
 	if (!file)
+	{
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		return 1;
+	}
 
 	if (compiler == nullptr)
-		if (yr_compiler_create(&compiler) != ERROR_SUCCESS)
+	{
+		if (yr_compiler_create(&compiler) != ERROR_SUCCESS) 
+		{
+			std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 			return 2;
+		}
+	}
 
 	int errorCount = yr_compiler_add_file(compiler, file, nullptr, filename);
 	if (errorCount > 0)
 	{
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		if (destroy)
 			yr_compiler_destroy(compiler);
 		return 3;
@@ -52,6 +62,7 @@ int YaraAnalyzer::LoadRules(const char* filename, YR_COMPILER* compiler, bool de
 
 	if (yr_compiler_get_rules(compiler, &m_Rules) != ERROR_SUCCESS)
 	{
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		if (destroy)
 			yr_compiler_destroy(compiler);
 		return 4;
@@ -82,7 +93,8 @@ int YaraAnalyzer::Scan(const uint8_t* buf, size_t bufSize, int flags, void* user
 
 int YaraAnalyzer::Scan(const char* filename, int flags, void* userData, int timeout)
 {
-	yr_set_configuration_uint32(YR_CONFIG_MAX_MATCH_DATA, 1024);
+	int len = 1024;
+	yr_set_configuration(YR_CONFIG_MAX_MATCH_DATA, &len);
 
 	int result = yr_rules_scan_file(
 		m_Rules,

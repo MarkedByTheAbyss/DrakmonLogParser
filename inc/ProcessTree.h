@@ -68,7 +68,7 @@ public:
 	void Insert(uint ParentPID, Process NewNode);
 	bool Contains(const uint& PID) const;
 	Process* GetProcess(uint PID);
-	void SetInjectedPID(uint PID);
+	void SetInjectedPID	(uint PID);
 	uint GetInjectedPID(uint PID) const;
 	bool IsEmpty() const;
 	const ProcessMap& GetTree() const;

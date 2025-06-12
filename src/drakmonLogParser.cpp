@@ -31,7 +31,10 @@ void drakmonLogParser::LoadPreInstProcs()
 {
 	std::ifstream file = OpenFile<std::ifstream>(m_PreinstPath);
 	if (not file.is_open())
+	{
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		return;
+	}
 
 	string line;
 	while (not file.eof())
@@ -47,11 +50,17 @@ void drakmonLogParser::SortProcesses()
 {
 	std::ifstream file = OpenFile<std::ifstream>(m_LogPath);
 	if (not file.is_open())
+	{
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		return;
+	}
 
 	std::ofstream sortedLogFile = OpenFile<std::ofstream>("temp.log");
 	if (not sortedLogFile.is_open())
+	{
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		return;
+	}
 
 	string line;
 
@@ -83,15 +92,24 @@ void drakmonLogParser::AnalyzeProcessTree()
 {
 	std::ifstream sortedLogFile = OpenFile<std::ifstream>("temp.log");
 	if (not sortedLogFile.is_open())
+	{
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		return;
+	}
 	
 	m_Analyzer = new YaraAnalyzer();
 	if (m_Analyzer->Initilalize() != 0)
+	{
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		return;
+	}
 
 	//if (m_Analyzer->LoadRules("rules/dropper.yara") != 0)
 	if (m_Analyzer->LoadRules(m_RulesPath.data()) != 0)
+	{
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		return;
+	}
 
 	m_Analyzer->SetCallback(Callback);
 
@@ -196,7 +214,10 @@ int drakmonLogParser::FormRecord(Functions::CallbackData* data)
 
 	std::ofstream file = OpenFile<std::ofstream>(m_RecordDirPath + "record.json");
 	if (!file.is_open())
+	{
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		return 1;
+	}
 
 	json resJson;
 	for (auto elem : *data)
@@ -221,7 +242,10 @@ int drakmonLogParser::LogFileMatches()
 {
 	std::ofstream file = OpenFile<std::ofstream>(m_RecordDirPath + "ruleMatches.json");
 	if (!file.is_open())
+	{
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		return 1;
+	}
 
 	file << ruleMatches;
 
