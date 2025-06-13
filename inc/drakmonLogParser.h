@@ -2,7 +2,12 @@
 #include <fstream>
 #include <optional>
 #include <filesystem>
+
+#if defined(_WIN32) || defined(_WIN64)
 #include <../inc/yara/rules.h>
+#else
+#include <yara/rules.h>
+#endif
 
 #include "json.hpp"
 #include "ProcessTree.h"

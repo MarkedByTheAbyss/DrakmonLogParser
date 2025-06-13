@@ -1,5 +1,7 @@
 # DrakmonLogParser
 
+Для установки на ubuntu требуется установить пакет libyara-dev версии >= 4.4.0
+
 Изначальная задумка:
 
 1. Process tree (создание задач с дропнутыми файлами) - PID/PPID
@@ -94,5 +96,4 @@ drakmonLogParser.exe -logPath=c:\work\testcase\drakmon.log -preinstPath=e:\GitRe
 ./app.exe -logPath=/home/aboba/build/DrakmonLogParser/testcase/drakmon.log -preinstPath=/home/aboba/build/DrakmonLogParser/preinst/preinst.json -recordDir=/home/aboba/build/DrakmonLogParser/records/ -rulesPath=/home/aboba/build/DrakmonLogParser/rules/dropper.yara
 
 Текущие проблемы:
-При компиляции на Ubuntu 22.04 были проблемы с yaralib (ошибки при компиляции правил и пропавшая функция yr_set_configuration_uint32)
-Также скомпилированное приложение на Ubuntu работает гораздо медленнее (~в 5 раз)
+drakmonLogParser line 296 - падаем на ubuntu в методе GetMatchJson, происходит некорректная обработка json'a

@@ -1,6 +1,11 @@
 #pragma once;
 #include <regex>
+
+#if defined(_WIN32) || defined(_WIN64)
 #include <../inc/yara/rules.h>
+#else
+#include <yara/rules.h>
+#endif
 
 #include "../inc/json.hpp"
 

@@ -94,7 +94,7 @@ int YaraAnalyzer::Scan(const uint8_t* buf, size_t bufSize, int flags, void* user
 int YaraAnalyzer::Scan(const char* filename, int flags, void* userData, int timeout)
 {
 	int len = 1024;
-	yr_set_configuration(YR_CONFIG_MAX_MATCH_DATA, &len);
+	yr_set_configuration_uint32(YR_CONFIG_MAX_MATCH_DATA, len);
 
 	int result = yr_rules_scan_file(
 		m_Rules,

@@ -1,9 +1,15 @@
 #pragma once
 #include <iostream>
+
+#if defined(_WIN32) || defined(_WIN64)
 #include <../inc/yara/compiler.h>
 #include <../inc/yara/libyara.h>
 #include <../inc/yara/rules.h>
-
+#else
+#include <yara/compiler.h>
+#include <yara/libyara.h>
+#include <yara/rules.h>
+#endif
 
 class YaraAnalyzer
 {
