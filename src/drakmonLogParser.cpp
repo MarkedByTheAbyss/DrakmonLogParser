@@ -104,7 +104,6 @@ void drakmonLogParser::AnalyzeProcessTree()
 		return;
 	}
 
-	//if (m_Analyzer->LoadRules("rules/dropper.yara") != 0)
 	if (m_Analyzer->LoadRules(m_RulesPath.data()) != 0)
 	{
 		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
@@ -113,20 +112,13 @@ void drakmonLogParser::AnalyzeProcessTree()
 
 	m_Analyzer->SetCallback(Callback);
 
-	Functions::CallbackData userData;
-
 	sortedLogFile.close();
+	Functions::CallbackData userData;
 	m_Analyzer->Scan("temp.log", 0, &userData);
 
-	/*for (auto i = userData.matchCount.begin(); i != userData.matchCount.end(); i++)
-	{
-		std::cout << "Match at: " << i->first << " count: " << i->second << '\n';
-	}*/
-
 	FormRecord(&userData);
-	//LogFileMatches();
 
-	//std::remove("temp.log");
+	std::remove("temp.log");
 	return;
 }
 
