@@ -7,8 +7,8 @@ int StartParser(drakmonLogParser* parser)
     time_t start, end;
 
     start = time(nullptr);
-    //parser->LoadPreInstProcs();
-    //parser->SortProcesses();
+    parser->LoadPreInstProcs();
+    parser->SortProcesses();
 
     end = time(nullptr);
     std::cout << "\nProcess tree built, procesess sorted into new file.";
