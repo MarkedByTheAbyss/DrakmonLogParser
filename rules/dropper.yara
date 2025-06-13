@@ -1,4 +1,4 @@
-rule CreateFileExe : SaveMatch
+rule CreateFileExe
 {
     strings:
         $NtCreateExeFileSysWOW = /NtCreateFile.{50,200}SysWOW64.{5,50}[0-9a-zA-Z]\.exe/

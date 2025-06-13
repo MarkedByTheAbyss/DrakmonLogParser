@@ -2,6 +2,7 @@
 #include <fstream>
 #include <optional>
 #include <filesystem>
+#include <string>
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <../inc/yara/rules.h>
@@ -20,8 +21,6 @@ template<class T>
 concept Filestream = std::is_base_of<std::ios, T>::value;
 
 typedef std::map<const char*, uint> RuleMatches;
-static RuleMatches m_Matcher;
-static json ruleMatches;
 
 struct PreInstalled
 {
@@ -50,6 +49,7 @@ public:
 	void SetLogPath(const std::string path);
 	void SetRecordDirPath(const std::string path);
 	void SetRulesPath(const std::string path);
+	void SetSaveMatches(const std::string val);
 	
 protected:
 
@@ -59,7 +59,7 @@ protected:
 	void InsertPreInstProcess(json const Json);
 	bool CheckPreInstalled(PreInstalled proc);
 	int FormRecord(Functions::CallbackData* data);
-	int LogFileMatches();
+	json GetJsonByOffset(int64_t offset);
 	static int Callback(YR_SCAN_CONTEXT* context, int message, void* messageData, void* userData);
 
 	template<Filestream T> 
@@ -78,6 +78,8 @@ protected:
 	string m_LogPath;
 	string m_RecordDirPath;
 	string m_RulesPath;
+
+	bool m_SaveMatches;
 
 };
 

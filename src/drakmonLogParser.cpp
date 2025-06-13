@@ -115,18 +115,18 @@ void drakmonLogParser::AnalyzeProcessTree()
 
 	Functions::CallbackData userData;
 
+	sortedLogFile.close();
 	m_Analyzer->Scan("temp.log", 0, &userData);
 
-	for (auto i = m_Matcher.begin(); i != m_Matcher.end(); i++)
+	/*for (auto i = userData.matchCount.begin(); i != userData.matchCount.end(); i++)
 	{
 		std::cout << "Match at: " << i->first << " count: " << i->second << '\n';
-	}
+	}*/
 
 	FormRecord(&userData);
-	LogFileMatches();
+	//LogFileMatches();
 
-	sortedLogFile.close();
-	std::remove("temp.log");
+	//std::remove("temp.log");
 	return;
 }
 
@@ -212,55 +212,103 @@ int drakmonLogParser::FormRecord(Functions::CallbackData* data)
 	if (!std::filesystem::is_directory(m_RecordDirPath))
 		std::filesystem::create_directories(m_RecordDirPath);
 
-	std::ofstream file = OpenFile<std::ofstream>(m_RecordDirPath + "record.json");
-	if (!file.is_open())
+	std::ofstream recordFile = OpenFile<std::ofstream>(m_RecordDirPath + "record.json");
+	if (!recordFile.is_open())
 	{
 		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
 		return 1;
 	}
-
-	json resJson;
-	for (auto elem : *data)
+	std::ofstream matchesFile;
+	if (m_SaveMatches)
 	{
-		json parentJson, childJson = json::array();
-		const string& key = elem.first;
-		const std::vector<string>& values = elem.second;
-		for (const auto& value : values)
+		matchesFile = OpenFile<std::ofstream>(m_RecordDirPath + "savedMatches.json");
+		if (!matchesFile.is_open())
 		{
-			childJson.insert(childJson.end(), value);
+			std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
+			return 1;
 		}
-		parentJson = { key, childJson };
-		resJson.emplace(parentJson);
 	}
-	file << resJson;
 
-	file.close();
+	recordFile << '{' << std::endl;
+	for (const auto& elem : data->matchCount)
+	{
+		json ruleJson;
+		json ruleStrings = json::array();
+		int ruleCount = 0;
+		for (const auto& strMatchCount : elem.second)
+		{
+			json strJson;
+			strJson["String"] = strMatchCount.strName;
+			strJson["Count"] = strMatchCount.count;
+			ruleCount += strMatchCount.count;
+			if (data->lineOffsets.contains(strMatchCount.strName))
+			{
+				json matchInfo = json::array();
+				for (const auto& offset : data->lineOffsets[strMatchCount.strName])
+				{
+					json logLine = GetJsonByOffset(offset);
+					if (!logLine.empty())
+					{
+						if (m_SaveMatches)
+							matchesFile << logLine << std::endl;
+						json logLineInfo;
+						logLineInfo["PID"] = GetOptVal<uint>(logLine, "PID").value_or(-1);
+						logLineInfo["PPID"] = GetOptVal<uint>(logLine, "PPID").value_or(-1);
+						string procName = GetOptVal<std::string>(logLine, "ProcessName").value_or("");
+						if (!procName.empty())
+							logLineInfo["ProcessName"] = procName.substr(procName.rfind('\\') + 1);
+						logLineInfo["Method"] = GetOptVal<std::string>(logLine, "Method").value_or("");
+						matchInfo += logLineInfo;
+					}
+				}
+				strJson["Matches"] = matchInfo;
+			}
+			ruleStrings += strJson;
+		}
+		ruleJson["Rule"] = elem.first;
+		ruleJson["Strings"] = ruleStrings;
+		ruleJson["Count"] =  ruleCount;
+		if (!data->recordData[elem.first].empty())
+			ruleJson["Data"] = data->recordData[elem.first];
+		recordFile << ruleJson << std::endl;
+		ruleCount = 0;
+	}
+	recordFile << '}' << std::endl;
+
+	recordFile.close();
+	if (m_SaveMatches)
+		matchesFile.close();
 	return 0;
 }
 
-int drakmonLogParser::LogFileMatches()
+json drakmonLogParser::GetJsonByOffset(int64_t offset)
 {
-	std::ofstream file = OpenFile<std::ofstream>(m_RecordDirPath + "ruleMatches.json");
-	if (!file.is_open())
+	std::ifstream file = OpenFile<std::ifstream>("temp.log");
+	if (not file.is_open())
 	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
-		return 1;
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__  << " - " << __FUNCTION__ << std::endl;
+		return NULL;
+	}
+	
+	file.seekg(offset);
+	int count = 0;
+	while (file.get() != '\n' && offset - count > 0)
+	{
+		file.unget();
+		count--;
+		file.seekg(offset - count);
 	}
 
-	file << ruleMatches;
-
+	string line;
+	std::getline(file, line);
 	file.close();
-	return 0;
+	return Str2Json(line);
 }
 
 int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* messageData, void* userData)
 {
 	YR_RULE* actRule = static_cast<YR_RULE*>(messageData);
-	if (!actRule)
-	{
-		return CALLBACK_ERROR;
-	}
-	if (message == CALLBACK_MSG_RULE_MATCHING)
+	if (actRule && message == CALLBACK_MSG_RULE_MATCHING)
 	{
 		Functions::CallbackData* callbackData = static_cast<Functions::CallbackData*>(userData);
 		YR_STRING* str;
@@ -268,46 +316,36 @@ int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* mess
 		{
 			if (str)
 			{
-				YR_RULE* curRule = &context->rules->rules_table[str->rule_idx];
-				const char* ruleId = curRule->identifier;
-				const char* strId = str->identifier;
 				uint count = context->matches[str->idx].count;
-				
-				json ruleString = { { "string", strId }, { "count", count } };
+				Functions::SetMatchesCount(callbackData, actRule->identifier, str->identifier, count);
 
-				if (!m_Matcher.empty() && m_Matcher.contains(ruleId))
-					m_Matcher.at(ruleId) += count;
-				else
-					m_Matcher.insert({ ruleId, { count } });
+				json ruleString;
 				const char* tag;
-				yr_rule_tags_foreach(curRule, tag)
+				yr_rule_tags_foreach(actRule, tag)
 				{
 					switch (STRHASH(tag))
 					{
 					case STRHASH("URL"):
-						Functions::GetUrls(context, str, callbackData);
+						ruleString["URL"] = Functions::GetUrls(context, str);
 						break;
 
 					case STRHASH("IP"):
-						Functions::GetIps(context, str, callbackData);
+						ruleString["IP"] = Functions::GetIps(context, str);
 						break;
 
 					case STRHASH("SaveMatch"):
-						ruleString["matches"] = Functions::GetMatchJson(context, str);
+						Functions::GetMatchJson(callbackData, context, str);
 						break;
 
 					default:
 						break;
 					}
 				}
-				if (ruleMatches.contains(ruleId))
-					ruleMatches[ruleId].push_back(ruleString);
-				else
-					ruleMatches[ruleId] = json::array({ ruleString });
+				if (!ruleString.empty())
+					Functions::AddRecordData(callbackData, actRule->identifier, ruleString);
 			}
 		}
 	}
-
 	return CALLBACK_CONTINUE;
 }
 
@@ -329,4 +367,9 @@ void drakmonLogParser::SetRecordDirPath(const std::string path)
 void drakmonLogParser::SetRulesPath(const std::string path)
 {
 	m_RulesPath = path;
+}
+
+void drakmonLogParser::SetSaveMatches(const std::string val)
+{
+	m_SaveMatches = std::stoi(val);
 }

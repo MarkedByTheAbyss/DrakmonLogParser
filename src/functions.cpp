@@ -16,7 +16,23 @@ using json = nlohmann::json;
 class Functions
 {
 public:
-	typedef std::map<std::string, std::vector<std::string>> CallbackData;
+	
+	struct StrMatchCount
+	{
+		const char* strName;
+		unsigned int count;
+	};
+
+	typedef std::map<const char*, json> RecordData;
+	typedef std::map<const char*, std::vector<StrMatchCount>> MatchCount;
+	typedef std::map<const char*, std::vector<int64_t>> LineOffsets;
+
+	struct CallbackData
+	{
+		RecordData recordData;
+		MatchCount matchCount;
+		LineOffsets lineOffsets;
+	};
 
 public:
 
@@ -28,15 +44,29 @@ public:
 		return hash;
 	}
 
-	static void AddToRecord(std::string key, std::string value, CallbackData* callbackData)
+	static void LogError()
 	{
-		if (!callbackData->empty() && callbackData->contains(key))
-			callbackData->at(key).push_back(value);
-		else
-			callbackData->insert({ key, { value } });
+		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << " - " << __FUNCTION__ << std::endl;
+		return;
 	}
 
-	static void GetUrls(YR_SCAN_CONTEXT* context, YR_STRING* str, CallbackData* callbackData)
+	static void SetMatchesCount(CallbackData* data, const char* rule, const char* str, unsigned int count)
+	{
+		if (!data->matchCount.empty() && data->matchCount.contains(rule))
+			data->matchCount[rule].push_back({ str, count });
+		else
+			data->matchCount.insert({ rule, {{ str, count }}});
+	}
+
+	static void AddRecordData(CallbackData* data, const char* rule, json ruleString)
+	{
+		if (data->recordData.contains(rule))
+			data->recordData[rule].push_back(ruleString);
+		else
+			data->recordData[rule] = json::array({ ruleString });
+	}
+
+	static std::string GetUrls(YR_SCAN_CONTEXT* context, YR_STRING* str)
 	{
 		YR_MATCH* yrMatch;
 		yr_string_matches_foreach(context, str, yrMatch)
@@ -51,13 +81,13 @@ public:
 				std::smatch match;
 				if (std::regex_search(curString, match, reg))
 				{
-					AddToRecord("URL", match.str(), callbackData);
+					return match.str();
 				}
 			}
 		}
 	}
 
-	static void GetIps(YR_SCAN_CONTEXT* context, YR_STRING* str, CallbackData* callbackData)
+	static std::string GetIps(YR_SCAN_CONTEXT* context, YR_STRING* str)
 	{
 		YR_MATCH* yrMatch;
 		yr_string_matches_foreach(context, str, yrMatch)
@@ -70,26 +100,21 @@ public:
 				std::smatch match;
 				if (std::regex_search(curString, match, reg))
 				{
-					AddToRecord("IP", match.str(), callbackData);
+					return match.str();
 				}
 			}
 		}
 	}
 
-	static json GetMatchJson(YR_SCAN_CONTEXT* context, YR_STRING* str)
+	static void GetMatchJson(CallbackData* data, YR_SCAN_CONTEXT* context, YR_STRING* str)
 	{
-		json matches = json::array();
-		
 		YR_MATCH* yrMatch;
 		yr_string_matches_foreach(context, str, yrMatch)
 		{
-			std::string curString((char*)yrMatch->data);
-			curString.insert(0, "{");
-
-			json curJson = json::parse(curString);
-			matches.insert(matches.end(), curJson);
+			if (!data->lineOffsets.empty() && data->lineOffsets.contains(str->identifier))
+				data->lineOffsets[str->identifier].push_back(yrMatch->offset);
+			else
+				data->lineOffsets.insert({ str->identifier, { yrMatch->offset } });
 		}
-		
-		return json::array({ matches });
 	}
 };

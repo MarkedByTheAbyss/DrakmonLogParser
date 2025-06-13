@@ -1,6 +1,14 @@
 # DrakmonLogParser
 
-Для установки на ubuntu требуется установить пакет libyara-dev версии >= 4.4.0
+!!!Для установки на ubuntu требуется установить пакет libyara-dev версии >= 4.4.0!!!
+
+Параметры запуска:
+ -h (--help, -help) - Показать справку
+ -preinstPath 	- Путь к json-файлу, в котором содержатся предустановленные процессы (поля - PID, ProcessName, Path)
+ -logPath 	- Путь к логу, который необходимо просканировать
+ -recordDir 	- Путь к директории, в которую будут записаны отчеты
+ -rulesPath 	- Путь к файлу, содержащему YARA-правила для сканирования
+ -saveMatches 	- Флаг, указывающий, нужно ли сохранять полные строки, найденные YARA-правилами с тегом "SaveMatches" (по умолчанию =0)
 
 Изначальная задумка:
 
@@ -94,6 +102,3 @@ drakmonLogParser.exe -logPath=c:\work\testcase\drakmon.log -preinstPath=e:\GitRe
 drakmonLogParser.exe -logPath=c:\work\testcase\drakmon.log -preinstPath=e:\GitRepos\drakmonLogParser\DrakmonLogParser\preinst\preinst.json -recordDir=e:\GitRepos\drakmonLogParser\DrakmonLogParser\records\ -rulesPath=e:\GitRepos\drakmonLogParser\DrakmonLogParser\rules\CommonAPIMonitoring.yara
 
 ./app.exe -logPath=/home/aboba/build/DrakmonLogParser/testcase/drakmon.log -preinstPath=/home/aboba/build/DrakmonLogParser/preinst/preinst.json -recordDir=/home/aboba/build/DrakmonLogParser/records/ -rulesPath=/home/aboba/build/DrakmonLogParser/rules/dropper.yara
-
-Текущие проблемы:
-drakmonLogParser line 296 - падаем на ubuntu в методе GetMatchJson, происходит некорректная обработка json'a

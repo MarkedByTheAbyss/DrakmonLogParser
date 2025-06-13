@@ -7,8 +7,8 @@ int StartParser(drakmonLogParser* parser)
     time_t start, end;
 
     start = time(nullptr);
-    parser->LoadPreInstProcs();
-    parser->SortProcesses();
+    //parser->LoadPreInstProcs();
+    //parser->SortProcesses();
 
     end = time(nullptr);
     std::cout << "\nProcess tree built, procesess sorted into new file.";
@@ -34,6 +34,8 @@ int SetArgs(drakmonLogParser* logParser, ArgParser* argParser)
         logParser->SetRecordDirPath(argParser->Get("-recordDir"));
     if (argParser->Contains("-rulesPath"))
         logParser->SetRulesPath(argParser->Get("-rulesPath"));
+    if (argParser->Contains("-saveMatches"))
+        logParser->SetSaveMatches(argParser->Get("-saveMatches"));
 
     return 0;
 }
@@ -46,6 +48,7 @@ void ShowHelp()
     std::cout << "\t-logPath - path to drakmon log" << std::endl;
     std::cout << "\t-recordDir - path to dir where records will be created" << std::endl;
     std::cout << "\t-rulesPath - path to YARA rules file (must end with \\\\ or /)" << std::endl;
+    std::cout << "\t-saveMatches - save entire log lines found by YARA rules with tag \"SaveMatches\"" << std::endl;
     std::cout << "\tCreated by Deniska and BoBaH" << std::endl;
 
 }
