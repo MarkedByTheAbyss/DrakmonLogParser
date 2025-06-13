@@ -30,12 +30,7 @@ T drakmonLogParser::OpenFile(const string& Filename)
 void drakmonLogParser::LoadPreInstProcs()
 {
 	std::ifstream file = OpenFile<std::ifstream>(m_PreinstPath);
-	if (not file.is_open())
-	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
-		return;
-	}
-
+	if (not file.is_open()) RETERR();
 	string line;
 	while (not file.eof())
 	{
@@ -49,18 +44,10 @@ void drakmonLogParser::LoadPreInstProcs()
 void drakmonLogParser::SortProcesses()
 {
 	std::ifstream file = OpenFile<std::ifstream>(m_LogPath);
-	if (not file.is_open())
-	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
-		return;
-	}
+	if (not file.is_open()) RETERR();
 
 	std::ofstream sortedLogFile = OpenFile<std::ofstream>("temp.log");
-	if (not sortedLogFile.is_open())
-	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
-		return;
-	}
+	if (not sortedLogFile.is_open()) RETERR();
 
 	string line;
 
@@ -91,24 +78,12 @@ void drakmonLogParser::WriteProcTree()
 void drakmonLogParser::AnalyzeProcessTree()
 {
 	std::ifstream sortedLogFile = OpenFile<std::ifstream>("temp.log");
-	if (not sortedLogFile.is_open())
-	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
-		return;
-	}
+	if (not sortedLogFile.is_open()) RETERR();
 	
 	m_Analyzer = new YaraAnalyzer();
-	if (m_Analyzer->Initilalize() != 0)
-	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
-		return;
-	}
+	if (m_Analyzer->Initilalize() != 0) RETERR();
 
-	if (m_Analyzer->LoadRules(m_RulesPath.data()) != 0)
-	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
-		return;
-	}
+	if (m_Analyzer->LoadRules(m_RulesPath.data()) != 0) RETERR();
 
 	m_Analyzer->SetCallback(Callback);
 
@@ -129,10 +104,7 @@ json drakmonLogParser::Str2Json(string const Logline) const
 	{
 		json = json::parse(Logline);
 	}
-	catch (const json::exception& e)
-	{
-		//pohuy
-	}
+	JSONCATCH();
 	return json;
 }
 
@@ -207,7 +179,7 @@ int drakmonLogParser::FormRecord(Functions::CallbackData* data)
 	std::ofstream recordFile = OpenFile<std::ofstream>(m_RecordDirPath + "record.json");
 	if (!recordFile.is_open())
 	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
+		LOGERR();
 		return 1;
 	}
 	std::ofstream matchesFile;
@@ -216,7 +188,7 @@ int drakmonLogParser::FormRecord(Functions::CallbackData* data)
 		matchesFile = OpenFile<std::ofstream>(m_RecordDirPath + "savedMatches.json");
 		if (!matchesFile.is_open())
 		{
-			std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
+			LOGERR();
 			return 1;
 		}
 	}
@@ -278,7 +250,7 @@ json drakmonLogParser::GetJsonByOffset(int64_t offset)
 	std::ifstream file = OpenFile<std::ifstream>("temp.log");
 	if (not file.is_open())
 	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__  << " - " << __FUNCTION__ << std::endl;
+		LOGERR();
 		return NULL;
 	}
 	

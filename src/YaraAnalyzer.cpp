@@ -14,8 +14,7 @@ int YaraAnalyzer::Initilalize()
 {
 	if (yr_initialize() != ERROR_SUCCESS)
 	{
-		std::cout << "YARA initialization failed\n";
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
+		LOGERR();
 		return 1;
 	}
 	return 0;
@@ -38,7 +37,7 @@ int YaraAnalyzer::LoadRules(const char* filename, YR_COMPILER* compiler, bool de
 
 	if (!file)
 	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
+		LOGERR();
 		return 1;
 	}
 
@@ -46,7 +45,7 @@ int YaraAnalyzer::LoadRules(const char* filename, YR_COMPILER* compiler, bool de
 	{
 		if (yr_compiler_create(&compiler) != ERROR_SUCCESS) 
 		{
-			std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
+			LOGERR();
 			return 2;
 		}
 	}
@@ -54,7 +53,7 @@ int YaraAnalyzer::LoadRules(const char* filename, YR_COMPILER* compiler, bool de
 	int errorCount = yr_compiler_add_file(compiler, file, nullptr, filename);
 	if (errorCount > 0)
 	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
+		LOGERR();
 		if (destroy)
 			yr_compiler_destroy(compiler);
 		return 3;
@@ -62,7 +61,7 @@ int YaraAnalyzer::LoadRules(const char* filename, YR_COMPILER* compiler, bool de
 
 	if (yr_compiler_get_rules(compiler, &m_Rules) != ERROR_SUCCESS)
 	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << std::endl;
+		LOGERR();
 		if (destroy)
 			yr_compiler_destroy(compiler);
 		return 4;

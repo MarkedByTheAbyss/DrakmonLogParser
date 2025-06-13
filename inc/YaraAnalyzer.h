@@ -11,6 +11,8 @@
 #include <yara/rules.h>
 #endif
 
+#include "../src/functions.cpp"
+
 class YaraAnalyzer
 {
 public:

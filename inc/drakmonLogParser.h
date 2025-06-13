@@ -91,8 +91,6 @@ inline std::optional<T> drakmonLogParser::GetOptVal(json json, const string& key
 		if (json.contains(key))
 			return json[key].get<T>();
 	}
-	catch (json::exception& e)
-	{
-	}
+	JSONCATCH();
 	return std::nullopt;
 }

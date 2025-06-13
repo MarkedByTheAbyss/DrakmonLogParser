@@ -1,5 +1,6 @@
 #pragma once;
 #include <regex>
+#include <source_location>
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <../inc/yara/rules.h>
@@ -10,6 +11,22 @@
 #include "../inc/json.hpp"
 
 #define STRHASH Functions::fnv1a_32
+
+#define LOGERR() \
+	Functions::LogError(std::source_location::current()) 
+
+#define RETERR() \
+	{	\
+	std::cout << "Returned with error:\n";	\
+	Functions::LogError(std::source_location::current()); \
+	return;	\
+	} \
+
+#define JSONCATCH() \
+	catch(json::exception e) \
+	{	\
+	};	\
+
 using json = nlohmann::json;
 
 
@@ -44,9 +61,10 @@ public:
 		return hash;
 	}
 
-	static void LogError()
+	static void LogError(std::source_location loc)
 	{
-		std::cout << "Error in:" << __FILE__ << ":" << __LINE__ << " - " << __FUNCTION__ << std::endl;
+		std::cout << "Error in:" << loc.file_name() << ":" << loc.line() 
+			<< " - " << loc.function_name() << std::endl;
 		return;
 	}
 
