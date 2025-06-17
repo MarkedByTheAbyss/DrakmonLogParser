@@ -3,6 +3,7 @@
 #include <optional>
 #include <filesystem>
 #include <string>
+#include <algorithm>
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <../inc/yara/rules.h>
@@ -34,6 +35,7 @@ class drakmonLogParser
 public:
 	// typedef
 	typedef std::vector<PreInstalled> PreInstalledProcs;
+	typedef std::vector<uint> FileOffsets;
 
 public:
 
@@ -72,7 +74,7 @@ protected:
 
 	ProcessTree m_ProcessTree;
 	PreInstalledProcs m_PreInstProcs;
-	YaraAnalyzer* m_Analyzer;
+	FileOffsets m_Offsets;
 
 	string m_PreinstPath;
 	string m_LogPath;
@@ -80,6 +82,8 @@ protected:
 	string m_RulesPath;
 
 	bool m_SaveMatches;
+
+	YaraAnalyzer* m_Analyzer;
 
 };
 

@@ -54,13 +54,17 @@ void drakmonLogParser::SortProcesses()
 	std::getline(file, line);
 	LoadInjectedPID(Str2Json(line));
 
+	m_Offsets.push_back(0);
 	uint linenum = 1;
 	while (not file.eof())
 	{
 		std::getline(file, line);
 		json json = Str2Json(line);
 		if (InsertProcess(json, linenum) == 0)
+		{
 			sortedLogFile << line + '\n';
+			m_Offsets.push_back(sortedLogFile.tellp());
+		}
 		++linenum;
 	}
 	file.close();
@@ -211,7 +215,7 @@ int drakmonLogParser::FormRecord(Functions::CallbackData* data)
 				for (const auto& offset : data->lineOffsets[strMatchCount.strName])
 				{
 					json logLine = GetJsonByOffset(offset);
-					if (!logLine.empty())
+					if (not logLine.empty())
 					{
 						if (m_SaveMatches)
 							matchesFile << logLine << std::endl;
@@ -232,7 +236,7 @@ int drakmonLogParser::FormRecord(Functions::CallbackData* data)
 		ruleJson["Rule"] = elem.first;
 		ruleJson["Strings"] = ruleStrings;
 		ruleJson["Count"] =  ruleCount;
-		if (!data->recordData[elem.first].empty())
+		if (not data->recordData[elem.first].empty())
 			ruleJson["Data"] = data->recordData[elem.first];
 		recordFile << ruleJson << std::endl;
 		ruleCount = 0;
@@ -253,20 +257,18 @@ json drakmonLogParser::GetJsonByOffset(int64_t offset)
 		LOGERR();
 		return NULL;
 	}
-	
-	file.seekg(offset);
-	int count = 0;
-	while (file.get() != '\n' && offset - count > 0)
-	{
-		file.unget();
-		count--;
-		file.seekg(offset - count);
-	}
 
-	string line;
-	std::getline(file, line);
-	file.close();
-	return Str2Json(line);
+	if (not m_Offsets.empty())
+	{
+		uint curOffsetInd = std::lower_bound(m_Offsets.begin(), m_Offsets.end(), offset) - m_Offsets.begin();
+		file.seekg(m_Offsets[curOffsetInd]);
+
+		string line;
+		std::getline(file, line);
+		file.close();
+		return Str2Json(line);
+	}
+	return NULL;	
 }
 
 int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* messageData, void* userData)
