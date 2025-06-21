@@ -261,7 +261,7 @@ json drakmonLogParser::GetJsonByOffset(int64_t offset)
 	if (not m_Offsets.empty())
 	{
 		uint curOffsetInd = std::lower_bound(m_Offsets.begin(), m_Offsets.end(), offset) - m_Offsets.begin();
-		file.seekg(m_Offsets[curOffsetInd]);
+		file.seekg(m_Offsets[curOffsetInd-1]);
 
 		string line;
 		std::getline(file, line);
