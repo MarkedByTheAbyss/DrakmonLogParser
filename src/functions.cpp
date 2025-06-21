@@ -1,6 +1,7 @@
 #pragma once;
 #include <regex>
 #include <source_location>
+#include <iostream>
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <../inc/yara/rules.h>

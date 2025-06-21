@@ -1,7 +1,8 @@
 # Compiler
 CXX := g++
 # Compiler flags
-CXXFLAGS := -Iinc -Wall -Wextra -std=c++20
+CXXFLAGS := -Iinc -Wall -Wextra -std=c++20 
+#Flag for debugging -g
 LDFLAGS := -Llib -lyara
 # Sources and object files
 SRC_DIR := src
