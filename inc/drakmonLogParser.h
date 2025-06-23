@@ -7,8 +7,10 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <../inc/yara/rules.h>
+#include <process.h>
 #else
 #include <yara/rules.h>
+#include <unistd.h>
 #endif
 
 #include "json.hpp"
@@ -57,6 +59,7 @@ protected:
 
 	void LoadInjectedPID(const json json);
 	json Str2Json(string const Logline) const;
+	string CreateTempFilePath();
 	int InsertProcess(json const Json, const uint linenum);
 	void InsertPreInstProcess(json const Json);
 	bool CheckPreInstalled(PreInstalled proc);
@@ -80,6 +83,7 @@ protected:
 	string m_LogPath;
 	string m_RecordDirPath;
 	string m_RulesPath;
+	string m_TempLogPath;
 
 	bool m_SaveMatches;
 

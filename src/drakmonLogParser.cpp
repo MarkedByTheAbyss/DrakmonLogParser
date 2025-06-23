@@ -1,5 +1,12 @@
 #include "../inc/drakmonLogParser.h"
 
+
+#if defined(_WIN32) || defined(_WIN64)
+    #define GET_PID() _getpid()
+#else
+    #define GET_PID() getpid()
+#endif
+
 void drakmonLogParser::LoadInjectedPID(const json json)
 {
 	uint injectedPID = GetOptVal<uint>(json, "InjectedPid").value_or(-1);
@@ -27,6 +34,17 @@ T drakmonLogParser::OpenFile(const string& Filename)
 	return file;
 }
 
+std::string drakmonLogParser::CreateTempFilePath()
+{
+	namespace fs = std::filesystem;
+	std::string filename;
+
+	do {
+		filename = fs::temp_directory_path().string() + "/temp_drakmon_" + std::to_string(GET_PID()) + std::to_string(rand()) + ".log";
+	} while (fs::exists(filename));
+	return filename;
+}
+
 void drakmonLogParser::LoadPreInstProcs()
 {
 	std::ifstream file = OpenFile<std::ifstream>(m_PreinstPath);
@@ -46,7 +64,8 @@ void drakmonLogParser::SortProcesses()
 	std::ifstream file = OpenFile<std::ifstream>(m_LogPath);
 	if (not file.is_open()) RETERR();
 
-	std::ofstream sortedLogFile = OpenFile<std::ofstream>("temp.log");
+	m_TempLogPath = CreateTempFilePath();
+	std::ofstream sortedLogFile = OpenFile<std::ofstream>(m_TempLogPath);
 	if (not sortedLogFile.is_open()) RETERR();
 
 	string line;
@@ -81,7 +100,7 @@ void drakmonLogParser::WriteProcTree()
 
 void drakmonLogParser::AnalyzeProcessTree()
 {
-	std::ifstream sortedLogFile = OpenFile<std::ifstream>("temp.log");
+	std::ifstream sortedLogFile = OpenFile<std::ifstream>(m_TempLogPath);
 	if (not sortedLogFile.is_open()) RETERR();
 	
 	m_Analyzer = new YaraAnalyzer();
@@ -93,11 +112,11 @@ void drakmonLogParser::AnalyzeProcessTree()
 
 	sortedLogFile.close();
 	Functions::CallbackData userData;
-	m_Analyzer->Scan("temp.log", 0, &userData);
+	m_Analyzer->Scan(m_TempLogPath.c_str(), 0, &userData);
 
 	FormRecord(&userData);
 
-	std::remove("temp.log");
+	std::remove(m_TempLogPath.c_str());
 	return;
 }
 
@@ -251,7 +270,7 @@ int drakmonLogParser::FormRecord(Functions::CallbackData* data)
 
 json drakmonLogParser::GetJsonByOffset(int64_t offset)
 {
-	std::ifstream file = OpenFile<std::ifstream>("temp.log");
+	std::ifstream file = OpenFile<std::ifstream>(m_TempLogPath);
 	if (not file.is_open())
 	{
 		LOGERR();
