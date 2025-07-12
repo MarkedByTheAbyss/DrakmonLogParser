@@ -33,6 +33,8 @@
 .vs/
 x64/
 bin/
+out/
+Debug/
 *.log
 *.json
 *.user

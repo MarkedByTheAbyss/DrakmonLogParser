@@ -27,10 +27,13 @@
     <ClCompile Include="..\src\YaraAnalyzer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ArgParser.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClInclude Include="..\src\functions.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cli_config.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parser_controller.cpp">
       <Filter>Исходные файлы</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,7 +53,13 @@
     <ClInclude Include="..\inc\YaraAnalyzer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="..\inc\ArgParser.h">
+    <ClInclude Include="..\inc\cli_config.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\parser_controller.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\CLI11.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

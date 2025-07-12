@@ -1,4 +1,4 @@
-#include "parser_controller.h"
+#include "../inc/parser_controller.h"
 #include <iostream>
 
 void ParserController::Configure(drakmonLogParser& parser, const CLI::App& app) {

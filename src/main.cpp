@@ -1,5 +1,5 @@
-﻿#include "parser_controller.h"
-#include "cli_config.h"
+﻿#include "../inc/parser_controller.h"
+#include "../inc/cli_config.h"
 #include <memory>
 #include <iostream>
 

@@ -152,20 +152,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\ArgParser.cpp" />
+    <ClCompile Include="..\src\cli_config.cpp" />
     <ClCompile Include="..\src\drakmonLogParser.cpp" />
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\parser_controller.cpp" />
     <ClCompile Include="..\src\ProcessTree.cpp" />
     <ClCompile Include="..\src\YaraAnalyzer.cpp" />
     <ClInclude Include="..\src\functions.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\inc\ArgParser.h" />
     <ClInclude Include="..\inc\drakmonLogParser.h" />
     <ClInclude Include="..\inc\yara.h" />
     <ClInclude Include="..\inc\json.hpp" />
     <ClInclude Include="..\inc\ProcessTree.h" />
     <ClInclude Include="..\inc\YaraAnalyzer.h" />
+    <ClInclude Include="..\inc\cli_config.h" />
+    <ClInclude Include="..\inc\parser_controller.h" />
+    <ClInclude Include="..\inc\CLI11.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
