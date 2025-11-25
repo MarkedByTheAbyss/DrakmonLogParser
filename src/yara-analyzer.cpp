@@ -1,8 +1,4 @@
-<<<<<<< HEAD:drakmonLogParser/YaraAnalyzer.cpp
-#include "YaraAnalyzer.h"
-=======
 #include "../inc/yara-analyzer.h"
->>>>>>> dev:src/yara-analyzer.cpp
 #ifndef ERROR_SUCCESS
 #define ERROR_SUCCESS 0L
 #endif
@@ -32,20 +28,12 @@ void YaraAnalyzer::SetCallback(YR_CALLBACK_FUNC func)
 int YaraAnalyzer::LoadRules(const char* filename, YR_COMPILER* compiler, bool destroy)
 {
 	FILE* file;
-<<<<<<< HEAD:drakmonLogParser/YaraAnalyzer.cpp
-=======
-
->>>>>>> dev:src/yara-analyzer.cpp
 #if defined(_WIN32) || defined (_WIN64)
 	fopen_s(&file, filename, "r");
 #else
 	file = fopen(filename, "r");
-<<<<<<< HEAD:drakmonLogParser/YaraAnalyzer.cpp
-#endif
-=======
 #endif 
 
->>>>>>> dev:src/yara-analyzer.cpp
 	if (!file)
 	{
 		LOGERR();
