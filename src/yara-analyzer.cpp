@@ -1,4 +1,4 @@
-#include "../inc/YaraAnalyzer.h"
+#include "../inc/yara-analyzer.h"
 #ifndef ERROR_SUCCESS
 #define ERROR_SUCCESS 0L
 #endif

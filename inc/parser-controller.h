@@ -1,6 +1,6 @@
 #pragma once
-#include "drakmonLogParser.h"
-#include "cli_config.h"
+#include "drakmon-log-parser.h"
+#include "cli-config.h"
 #include <memory>
 #include <functional>
 

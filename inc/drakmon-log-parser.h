@@ -14,8 +14,8 @@
 #endif
 
 #include "json.hpp"
-#include "ProcessTree.h"
-#include "YaraAnalyzer.h"
+#include "process-tree.h"
+#include "yara-analyzer.h"
 #include "../src/functions.cpp"
 
 using json = nlohmann::json;

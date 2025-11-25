@@ -152,23 +152,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\cli_config.cpp" />
-    <ClCompile Include="..\src\drakmonLogParser.cpp" />
+    <ClCompile Include="..\src\cli-config.cpp" />
+    <ClCompile Include="..\src\drakmon-log-parser.cpp" />
     <ClCompile Include="..\src\main.cpp" />
-    <ClCompile Include="..\src\parser_controller.cpp" />
-    <ClCompile Include="..\src\ProcessTree.cpp" />
-    <ClCompile Include="..\src\YaraAnalyzer.cpp" />
+    <ClCompile Include="..\src\parser-controller.cpp" />
+    <ClCompile Include="..\src\process-tree.cpp" />
+    <ClCompile Include="..\src\yara-analyzer.cpp" />
     <ClInclude Include="..\src\functions.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\inc\drakmonLogParser.h" />
+    <ClInclude Include="..\inc\drakmon-log-parser.h" />
     <ClInclude Include="..\inc\yara.h" />
     <ClInclude Include="..\inc\json.hpp" />
-    <ClInclude Include="..\inc\ProcessTree.h" />
-    <ClInclude Include="..\inc\YaraAnalyzer.h" />
-    <ClInclude Include="..\inc\cli_config.h" />
-    <ClInclude Include="..\inc\parser_controller.h" />
-    <ClInclude Include="..\inc\CLI11.hpp" />
+    <ClInclude Include="..\inc\process-tree.h" />
+    <ClInclude Include="..\inc\yara-analyzer.h" />
+    <ClInclude Include="..\inc\cli-config.h" />
+    <ClInclude Include="..\inc\parser-controller.h" />
+    <ClInclude Include="..\inc\cli11.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -12,7 +12,7 @@ SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 
 # Executable name
-TARGET := app.exe
+TARGET := LogParser
 
 # default targets
 all: $(TARGET)

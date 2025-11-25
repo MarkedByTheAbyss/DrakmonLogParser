@@ -1,4 +1,4 @@
-#include "../inc/cli_config.h"
+#include "../inc/cli-config.h"
 
 void SetupCLIOptions(CLI::App& app) {
     app.add_option("--preinstPath", "Path to preinstalled processes JSON")

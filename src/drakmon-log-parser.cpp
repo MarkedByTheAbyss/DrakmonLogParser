@@ -1,4 +1,4 @@
-#include "../inc/drakmonLogParser.h"
+#include "../inc/drakmon-log-parser.h"
 
 
 #if defined(_WIN32) || defined(_WIN64)
