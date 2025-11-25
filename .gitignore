@@ -32,6 +32,10 @@
 
 .vs/
 x64/
+bin/
+out/
+Debug/
+build/
 *.log
 *.json
 *.user
