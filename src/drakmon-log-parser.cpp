@@ -7,24 +7,18 @@
     #define GET_PID() getpid()
 #endif
 
-void drakmonLogParser::LoadInjectedPID(const json json)
+void drakmonLogParser::LoadInjectedPID(const json injectedJson)
 {
-	uint injectedPID = GetOptVal<uint>(json, "InjectedPid").value_or(-1);
-	m_ProcessTree.SetInjectedPID(injectedPID);
+	uint injPID = GetOptVal<uint>(injectedJson, "InjectedPid").value_or(-1);
+	m_ProcessTree.SetInjectedPID(injPID);
+	string ProcessName = GetOptVal<string>(injectedJson, "ProcessName").value_or("");
 
-	string fullFilename = GetOptVal<string>(json, "ProcessName").value_or("");
-	uint filenameInd = fullFilename.rfind("\\");
-	string filename = fullFilename.substr(filenameInd + 1);
-	string path = fullFilename.substr(0, filenameInd + 1);
+	json processJson;
+	processJson["PID"] = injPID;
+	processJson["ProcessName"] = ProcessName;
 
-	Process injectedProc(
-		injectedPID,
-		0,	
-		false,
-		fullFilename,
-		path
-	);
-	m_ProcessTree.Insert(injectedPID, injectedProc);
+	ProcessInfoExt injInfoExt(processJson);
+	m_ProcessTree.Insert(injPID, injInfoExt);
 }
 
 template<Filestream T> 
@@ -90,13 +84,13 @@ void drakmonLogParser::SortProcesses()
 	sortedLogFile.close();
 }
 
-void drakmonLogParser::WriteProcTree()
-{
-	for (auto& elem : m_ProcessTree.GetTree())
-	{
-		std::cout << "\"PID\":" << elem.first << ' ' << elem.second << std::endl;
-	}
-}
+//void drakmonLogParser::WriteProcTree()
+//{
+//	for (auto& elem : m_ProcessTree.GetTree())
+//	{
+//		std::cout << "\"PID\":" << elem.first << ' ' << elem.second << std::endl;
+//	}
+//}
 
 void drakmonLogParser::AnalyzeProcessTree()
 {
@@ -135,29 +129,14 @@ int drakmonLogParser::InsertProcess(json const json, const uint linenum)
 {
 	try
 	{
-		uint pid = GetOptVal<uint>(json, "PID").value_or(-1);
-		if (m_ProcessTree.Contains(pid))
-			return 0;
-
-		uint ppid = GetOptVal<uint>(json, "PPID").value_or(-1);
-		Process* parent = m_ProcessTree.GetProcess(ppid);
-		if (parent == nullptr || parent->GetIsPreInstalled() == true)
+		ProcessInfoExt procInfo(json);
+		ProcessInfoExt* parent = m_ProcessTree.GetProcess(procInfo.GetParentPID());
+		if (parent == nullptr || false)
 			return 1;
-
-		parent->AppendChild(GetOptVal<uint>(json, "PID").value_or(-1));
-		string fullFilename = GetOptVal<string>(json, "ProcessName").value_or("");
-		uint filenameInd = fullFilename.rfind("\\");
-		string filename = fullFilename.substr(filenameInd + 1);
-		string path = fullFilename.substr(0, filenameInd + 1);
-
-		Process newProc(
-			ppid,
-			linenum,
-			CheckPreInstalled({ pid, filename, path }),
-			filename,
-			path
-		);
-		m_ProcessTree.Insert(pid, newProc);
+		parent->AppendChild(procInfo.GetPID());
+		
+		procInfo.SetLineNumber(linenum);
+		m_ProcessTree.Insert(procInfo.GetPID(), procInfo);
 		return 0;
 	}
 	catch (json::exception& e)

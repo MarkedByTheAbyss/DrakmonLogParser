@@ -70,9 +70,6 @@ protected:
 	template<Filestream T> 
 	T OpenFile(const string& Filename);
 	
-	template<class T>
-	std::optional<T> GetOptVal(json json, const string& key) const;
-
 protected:
 
 	ProcessTree m_ProcessTree;
@@ -90,15 +87,3 @@ protected:
 	YaraAnalyzer* m_Analyzer;
 
 };
-
-template<class T>
-inline std::optional<T> drakmonLogParser::GetOptVal(json json, const string& key) const
-{
-	try
-	{
-		if (json.contains(key))
-			return json[key].get<T>();
-	}
-	JSONCATCH();
-	return std::nullopt;
-}

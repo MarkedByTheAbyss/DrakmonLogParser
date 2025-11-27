@@ -36,6 +36,8 @@ bin/
 out/
 Debug/
 build/
+log/
+
 *.log
 *.json
 *.user

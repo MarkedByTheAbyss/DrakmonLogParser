@@ -13,6 +13,7 @@ set(SOURCES
     src/functions.cpp
     src/main.cpp
     src/process-tree.cpp
+    src/process-info.cpp
     src/yara-analyzer.cpp
 )
 
