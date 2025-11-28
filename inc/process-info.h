@@ -41,6 +41,8 @@ protected:
 	uint	ParentPID;
 	string	ProcessName;
 	string	Method;
+	string	Status;
+
 
 };
 

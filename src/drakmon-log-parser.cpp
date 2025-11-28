@@ -114,6 +114,30 @@ void drakmonLogParser::AnalyzeProcessTree()
 	return;
 }
 
+void drakmonLogParser::AnalyzeProcessTree(bool flag)
+{
+	m_Analyzer = new YaraAnalyzer();
+	if (m_Analyzer->Initilalize() != 0) RETERR();
+
+	if (m_Analyzer->LoadRules(m_RulesPath.data()) != 0) RETERR();
+
+	m_Analyzer->SetCallback(Callback);
+
+	const ProcessTree::ProcessMap map = m_ProcessTree.GetTree();
+	Functions::CallbackData userData;
+
+	for (const auto& [key, value] : map)
+	{
+		string jsonString = to_string(value.GetAsJson());
+		m_Analyzer->Scan((uint8_t*)jsonString.data(), jsonString.length(), 0, &userData);
+	}
+
+	FormRecord(&userData);
+
+	std::remove(m_TempLogPath.c_str());
+	return;
+}
+
 json drakmonLogParser::Str2Json(string const Logline) const
 {
 	json json;

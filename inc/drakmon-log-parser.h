@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <string>
 #include <algorithm>
+#include <cstdint>
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <../inc/yara/rules.h>
@@ -48,6 +49,7 @@ public:
 	void SortProcesses();
 	void WriteProcTree();
 	void AnalyzeProcessTree();
+	void AnalyzeProcessTree(bool);
 
 	void SetPreinstPath(const std::string path);
 	void SetLogPath(const std::string path);
