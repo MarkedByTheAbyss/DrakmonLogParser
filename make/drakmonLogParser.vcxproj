@@ -158,8 +158,10 @@
     <ClCompile Include="..\src\parser-controller.cpp" />
     <ClCompile Include="..\src\process-tree.cpp" />
     <ClCompile Include="..\src\process-info.cpp" />
+    <ClCompile Include="..\src\ruleset.cpp" />
     <ClCompile Include="..\src\yara-analyzer.cpp" />
     <ClInclude Include="..\inc\process-info.h" />
+    <ClInclude Include="..\inc\ruleset.h" />
     <ClInclude Include="..\src\functions.cpp" />
   </ItemGroup>
   <ItemGroup>
