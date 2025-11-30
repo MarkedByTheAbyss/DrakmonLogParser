@@ -11,9 +11,9 @@ int main(int argc, char** argv) {
         
         ValidateArguments(app);
         
-        auto parser = std::make_unique<drakmonLogParser>();
-        ParserController::Configure(*parser, app);
-        return ParserController::Start(parser.get());
+        DrakmonLogParser parser;
+        ParserController::Configure(parser, app);
+        return ParserController::Start(parser);
         
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

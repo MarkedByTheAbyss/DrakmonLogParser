@@ -24,27 +24,42 @@ int Ruleset::LoadRules(string filename)
 
 void Ruleset::InsertRule(const json& rule)
 {
-	string plugin = GetOptVal<string>(rule, "Plugin").value_or("");
-	string method = GetOptVal<string>(rule, "Method").value_or("");
-	json fields = GetOptVal<json>(rule, "Fields").value_or(NULL);
+	string pluginName = GetOptVal<string>(rule, "Plugin").value_or("");
+	json methods = GetOptVal<json>(rule, "Methods").value_or(NULL);
+	json pluginFields = GetOptVal<json>(rule, "Fields").value_or(NULL);
 
-	uint pluginHash;
-	uint methodHash;
-	if (not plugin.empty())
-		pluginHash = STRHASH(plugin.c_str());
-	if (not method.empty())
-		methodHash = STRHASH(method.c_str());
-	if (fields != NULL)
-		if (not m_RulesetMap.contains(pluginHash))
-			m_RulesetMap.insert({ pluginHash, {} });
-		m_RulesetMap[pluginHash].insert({ methodHash, fields });
+	if (pluginName.empty() || methods == NULL)
+		return;
+
+	uint pluginHash = STRHASH(pluginName.c_str());
+	if (methods != NULL)
+	{
+		//if (not m_RulesetMap.contains(pluginHash))
+		//	m_RulesetMap.insert({ pluginHash, {} });
+
+		for (const json& methodJson : methods)
+		{
+			string methodName = GetOptVal<string>(methodJson, "Method").value_or("");
+			json methodFields = GetOptVal<json>(methodJson, "Fields").value_or(NULL);
+			uint methodHash = STRHASH(methodName.c_str());
+			
+			m_RulesetMap[pluginHash].insert({ methodHash, {} });
+			for (const string& field : methodFields)
+				m_RulesetMap[pluginHash][methodHash].push_back(field);
+
+			if (pluginFields == NULL) continue;
+			for (const string& field : pluginFields)
+				m_RulesetMap[pluginHash][methodHash].push_back(field);
+		}
+	}
+	
 }
 
-json Ruleset::GetRule(string plugin, string method) const
+std::vector<string> Ruleset::GetRuleFields(string plugin, string method) const
 {
 	uint pluginHash = STRHASH(plugin.c_str());
 	uint methodHash = STRHASH(method.c_str());
-	json retVal = NULL;
+	std::vector<string> retVal;
 
 	if (m_RulesetMap.contains(pluginHash))
 		if (m_RulesetMap.at(pluginHash).contains(methodHash))

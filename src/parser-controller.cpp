@@ -1,7 +1,7 @@
 #include "../inc/parser-controller.h"
 #include <iostream>
 
-void ParserController::Configure(drakmonLogParser& parser, const CLI::App& app) {
+void ParserController::Configure(DrakmonLogParser& parser, const CLI::App& app) {
     auto getOpt = [&app](const char* name) {
         return app.count(name) ? app.get_option(name)->as<std::string>() : "";
     };
@@ -21,24 +21,21 @@ void ParserController::Configure(drakmonLogParser& parser, const CLI::App& app) 
     }
 }
 
-void ParserController::PrintTimeStats(const std::string& message, time_t start, time_t end) {
+void ParserController::PrintTimeStats(const std::string& message, time_t& start, time_t& end) {
     std::cout << "\n" << message;
     std::cout << "\nWork time: " << end - start << " seconds!\n" << std::endl;
 }
 
-int ParserController::Start(drakmonLogParser* parser) {
-    if (!parser) {
-        throw std::runtime_error("Parser instance is null");
-    }
-
+int ParserController::Start(DrakmonLogParser& parser) {
+    
     time_t start = time(nullptr);
-    parser->LoadPreInstProcs();
-    parser->SortProcesses();
+    //parser.LoadPreInstProcs();
+    //parser.SortProcesses();
     time_t end = time(nullptr);
     PrintTimeStats("Process tree built, processes sorted into new file.", start, end);
 
     start = end;
-    parser->AnalyzeProcessTree();
+    parser.AnalyzeProcessTree();
     end = time(nullptr);
     PrintTimeStats("Process tree analysis complete.", start, end);
 

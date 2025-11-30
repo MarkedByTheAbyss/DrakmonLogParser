@@ -7,7 +7,7 @@
     #define GET_PID() getpid()
 #endif
 
-void drakmonLogParser::LoadInjectedPID(const json injectedJson)
+void DrakmonLogParser::LoadInjectedPID(const json injectedJson)
 {
 	uint injPID = GetOptVal<uint>(injectedJson, "InjectedPid").value_or(-1);
 	m_ProcessTree.SetInjectedPID(injPID);
@@ -22,13 +22,13 @@ void drakmonLogParser::LoadInjectedPID(const json injectedJson)
 }
 
 template<Filestream T> 
-T drakmonLogParser::OpenFile(const string& Filename)
+T DrakmonLogParser::OpenFile(const string& Filename)
 {
 	T file(Filename);
 	return file;
 }
 
-std::string drakmonLogParser::CreateTempFilePath()
+std::string DrakmonLogParser::CreateTempFilePath()
 {
 	namespace fs = std::filesystem;
 	std::string filename;
@@ -39,7 +39,7 @@ std::string drakmonLogParser::CreateTempFilePath()
 	return filename;
 }
 
-void drakmonLogParser::LoadPreInstProcs()
+void DrakmonLogParser::LoadPreInstProcs()
 {
 	std::ifstream file = OpenFile<std::ifstream>(m_PreinstPath);
 	if (not file.is_open()) RETERR();
@@ -53,7 +53,7 @@ void drakmonLogParser::LoadPreInstProcs()
 	file.close();
 }
 
-void drakmonLogParser::SortProcesses()
+void DrakmonLogParser::SortProcesses()
 {
 	std::ifstream file = OpenFile<std::ifstream>(m_LogPath);
 	if (not file.is_open()) RETERR();
@@ -92,8 +92,10 @@ void drakmonLogParser::SortProcesses()
 //	}
 //}
 
-void drakmonLogParser::AnalyzeProcessTree()
+void DrakmonLogParser::AnalyzeProcessTree()
 {
+	m_Ruleset.LoadRules("e:\\GitRepos\\drakmonLogParser\\DrakmonLogParser\\parsing_rules\\rules.json");
+
 	std::ifstream sortedLogFile = OpenFile<std::ifstream>(m_TempLogPath);
 	if (not sortedLogFile.is_open()) RETERR();
 	
@@ -114,7 +116,7 @@ void drakmonLogParser::AnalyzeProcessTree()
 	return;
 }
 
-void drakmonLogParser::AnalyzeProcessTree(bool flag)
+void DrakmonLogParser::AnalyzeProcessTree(bool flag)
 {
 	m_Analyzer = new YaraAnalyzer();
 	if (m_Analyzer->Initilalize() != 0) RETERR();
@@ -138,7 +140,7 @@ void drakmonLogParser::AnalyzeProcessTree(bool flag)
 	return;
 }
 
-json drakmonLogParser::Str2Json(string const Logline) const
+json DrakmonLogParser::Str2Json(string const Logline) const
 {
 	json json;
 	try
@@ -149,7 +151,7 @@ json drakmonLogParser::Str2Json(string const Logline) const
 	return json;
 }
 
-int drakmonLogParser::InsertProcess(json const json, const uint linenum)
+int DrakmonLogParser::InsertProcess(json const json, const uint linenum)
 {
 	try
 	{
@@ -169,7 +171,7 @@ int drakmonLogParser::InsertProcess(json const json, const uint linenum)
 	}
 }
 
-void drakmonLogParser::InsertPreInstProcess(json const json)
+void DrakmonLogParser::InsertPreInstProcess(json const json)
 {
 	try
 	{
@@ -187,7 +189,7 @@ void drakmonLogParser::InsertPreInstProcess(json const json)
 	}
 }
 
-bool drakmonLogParser::CheckPreInstalled(PreInstalled proc)
+bool DrakmonLogParser::CheckPreInstalled(PreInstalled proc)
 {
 	for (auto& e : m_PreInstProcs)
 	{
@@ -197,7 +199,7 @@ bool drakmonLogParser::CheckPreInstalled(PreInstalled proc)
 	return false;
 }
 
-int drakmonLogParser::FormRecord(Functions::CallbackData* data)
+int DrakmonLogParser::FormRecord(Functions::CallbackData* data)
 {
 	if (!std::filesystem::is_directory(m_RecordDirPath))
 		std::filesystem::create_directories(m_RecordDirPath);
@@ -271,7 +273,7 @@ int drakmonLogParser::FormRecord(Functions::CallbackData* data)
 	return 0;
 }
 
-json drakmonLogParser::GetJsonByOffset(int64_t offset)
+json DrakmonLogParser::GetJsonByOffset(int64_t offset)
 {
 	std::ifstream file = OpenFile<std::ifstream>(m_TempLogPath);
 	if (not file.is_open())
@@ -293,7 +295,7 @@ json drakmonLogParser::GetJsonByOffset(int64_t offset)
 	return NULL;	
 }
 
-int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* messageData, void* userData)
+int DrakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* messageData, void* userData)
 {
 	YR_RULE* actRule = static_cast<YR_RULE*>(messageData);
 	if (actRule && message == CALLBACK_MSG_RULE_MATCHING)
@@ -337,27 +339,27 @@ int drakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* mess
 	return CALLBACK_CONTINUE;
 }
 
-void drakmonLogParser::SetPreinstPath(const std::string path)
+void DrakmonLogParser::SetPreinstPath(const std::string path)
 {
 	m_PreinstPath = path;
 }
 
-void drakmonLogParser::SetLogPath(const std::string path)
+void DrakmonLogParser::SetLogPath(const std::string path)
 {
 	m_LogPath = path;
 }
 
-void drakmonLogParser::SetRecordDirPath(const std::string path)
+void DrakmonLogParser::SetRecordDirPath(const std::string path)
 {
 	m_RecordDirPath = path;
 }
 
-void drakmonLogParser::SetRulesPath(const std::string path)
+void DrakmonLogParser::SetRulesPath(const std::string path)
 {
 	m_RulesPath = path;
 }
 
-void drakmonLogParser::SetSaveMatches(const std::string val)
+void DrakmonLogParser::SetSaveMatches(const std::string val)
 {
 	m_SaveMatches = std::stoi(val);
 }

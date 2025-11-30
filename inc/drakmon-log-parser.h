@@ -17,6 +17,8 @@
 #include "json.hpp"
 #include "process-tree.h"
 #include "yara-analyzer.h"
+#include "ruleset.h"
+
 #include "../src/functions.cpp"
 
 using json = nlohmann::json;
@@ -33,7 +35,7 @@ struct PreInstalled
 	string Path;
 };
 
-class drakmonLogParser 
+class DrakmonLogParser 
 {
 public:
 	// typedef
@@ -42,8 +44,8 @@ public:
 
 public:
 
-	drakmonLogParser() = default;
-	~drakmonLogParser() = default;
+	DrakmonLogParser() = default;
+	~DrakmonLogParser() = default;
 
 	void LoadPreInstProcs();
 	void SortProcesses();
@@ -85,6 +87,8 @@ protected:
 	string m_TempLogPath;
 
 	bool m_SaveMatches;
+
+	Ruleset m_Ruleset;
 
 	YaraAnalyzer* m_Analyzer;
 
