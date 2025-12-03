@@ -49,7 +49,6 @@ public:
 	{
 		RecordData recordData;
 		MatchCount matchCount;
-		LineOffsets lineOffsets;
 	};
 
 public:
@@ -125,15 +124,4 @@ public:
 		}
 	}
 
-	static void GetMatchJson(CallbackData* data, YR_SCAN_CONTEXT* context, YR_STRING* str)
-	{
-		YR_MATCH* yrMatch;
-		yr_string_matches_foreach(context, str, yrMatch)
-		{
-			if (!data->lineOffsets.empty() && data->lineOffsets.contains(str->identifier))
-				data->lineOffsets[str->identifier].push_back(yrMatch->offset);
-			else
-				data->lineOffsets.insert({ str->identifier, { yrMatch->offset } });
-		}
-	}
 };

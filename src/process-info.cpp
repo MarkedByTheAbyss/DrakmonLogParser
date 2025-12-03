@@ -1,80 +1,61 @@
 #include "../inc/process-info.h"
 
-ProcessInfo::ProcessInfo(const json& processJson)
+ProcessInfo::ProcessInfo(const json& processJson, const std::vector<string>& fields)
 {
-	this->Plugin		= GetOptVal<string>(processJson, "Plugin").value_or("");
-	this->PID			= GetOptVal<uint>(processJson, "PID").value_or(0);
-	this->ParentPID		= GetOptVal<uint>(processJson, "PPID").value_or(0);
-	this->ProcessName	= GetOptVal<string>(processJson, "ProcessName").value_or("");
-	this->Method		= GetOptVal<string>(processJson, "Method").value_or("");
-}
-
-uint ProcessInfo::GetPID() const
-{
-	return this->PID;
+	try
+	{
+		for (const string& field : fields)
+		{
+			m_InfoJson[field] = processJson[field];
+		}
+	}
+	JSONCATCH();
 }
 
 uint ProcessInfo::GetParentPID() const
 {
-	return this->ParentPID;
+	return GetOptVal<uint>(m_InfoJson, "PPID").value_or("");
 }
 
-string ProcessInfo::GetPlugin() const
+uint ProcessInfo::GetPID() const
 {
-	return this->Plugin;
+	return GetOptVal<uint>(m_InfoJson, "PID").value_or("");
 }
 
-string ProcessInfo::GetMethod() const
+//
+//string ProcessInfo::GetPlugin() const
+//{
+//	return this->Plugin;
+//}
+//
+//string ProcessInfo::GetMethod() const
+//{
+//	return this->Method;
+//}
+
+json ProcessInfo::Get() const
 {
-	return this->Method;
+	return m_InfoJson;
 }
 
-string ProcessInfo::GetProcName() const
-{
-	return this->ProcessName;
-}
-
-json ProcessInfo::GetAsJson() const
-{
-	json retVal;
-	retVal["Plugin"] = this->Plugin;
-	retVal["PID"] = this->PID;
-	retVal["PPID"] = this->ParentPID;
-	retVal["ProcessName"] = this->ProcessName;
-	retVal["Method"] = this->Method;
-}
-
-
-/// 
-/// 
-/// 
-ProcessInfoExt::ProcessInfoExt(const json& processJson)
-{
-	this->Plugin = GetOptVal<string>(processJson, "Plugin").value_or("");
-	this->PID = GetOptVal<uint>(processJson, "PID").value_or(0);
-	this->ParentPID = GetOptVal<uint>(processJson, "PPID").value_or(0);
-	this->ProcessName = GetOptVal<string>(processJson, "ProcessName").value_or("");
-	this->Method = GetOptVal<string>(processJson, "Method").value_or("");
-}
-
-void ProcessInfoExt::AddDroppedFile(DroppedFile File)
+void ProcessInfo::AddDroppedFile(DroppedFile File)
 {
 	this->ExtraInfo.DroppedFiles.push_back(File);
 }
 
-void ProcessInfoExt::SetFlag(string Flagname, uint Count)
+void ProcessInfo::SetFlag(string Flagname, uint Count)
 {
 	this->ExtraInfo.Flags.insert({ Flagname, Count });
 }
 
-void ProcessInfoExt::AppendChild(uint ChildPID)
+void ProcessInfo::AppendChild(uint ChildPID)
 {
 	this->ExtraInfo.Childs.push_back(ChildPID);
 }
 
-json ProcessInfoExt::GetAsJsonExt() const
+json ProcessInfo::GetAsJsonExt() const
 {
-	json retVal = GetAsJson();
+	json retVal = Get();
 	
 	json extraInfo;
 	extraInfo["IsPreInstalled"] = GetIsPreInstalled();
@@ -104,22 +85,22 @@ json ProcessInfoExt::GetAsJsonExt() const
 	return retVal;
 } 
 
-bool ProcessInfoExt::GetIsPreInstalled() const
+bool ProcessInfo::GetIsPreInstalled() const
 {
 	return this->ExtraInfo.IsPreInstalled;
 }
 
-uint ProcessInfoExt::GetLineNumber() const
+uint ProcessInfo::GetLineNumber() const
 {
 	return this->ExtraInfo.LineNumber;
 }
 
-void ProcessInfoExt::SetLineNumber(uint lineNumber)
+void ProcessInfo::SetLineNumber(uint lineNumber)
 {
 	this->ExtraInfo.LineNumber = lineNumber;
 }
 
-void ProcessInfoExt::SetIsPreInstalled(bool isPreInstalled)
+void ProcessInfo::SetIsPreInstalled(bool isPreInstalled)
 {
 	this->ExtraInfo.IsPreInstalled = isPreInstalled;
 }

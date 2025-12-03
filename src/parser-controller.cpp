@@ -29,8 +29,8 @@ void ParserController::PrintTimeStats(const std::string& message, time_t& start,
 int ParserController::Start(DrakmonLogParser& parser) {
     
     time_t start = time(nullptr);
-    //parser.LoadPreInstProcs();
-    //parser.SortProcesses();
+    parser.LoadPreInstProcs();
+    parser.BuildProcessTree();
     time_t end = time(nullptr);
     PrintTimeStats("Process tree built, processes sorted into new file.", start, end);
 

@@ -19,40 +19,6 @@ class ProcessInfo
 {
 public:
 
-public:
-
-	ProcessInfo()	= default;
-	~ProcessInfo()	= default;
-
-	ProcessInfo(const json& processJson);
-
-	virtual string	GetPlugin()			const;
-	virtual uint	GetPID()			const;
-	virtual uint	GetParentPID()		const;
-	virtual string	GetProcName()		const;
-	virtual string	GetMethod()			const;
-
-	json	GetAsJson()			const;
-
-protected:
-
-	string	Plugin;
-	uint	PID;
-	uint	ParentPID;
-	string	ProcessName;
-	string	Method;
-	string	Status;
-
-
-};
-
-/// <summary>
-/// 
-/// </summary>
-class ProcessInfoExt : public ProcessInfo
-{
-public:
-
 	struct DroppedFile
 	{
 		string Name;
@@ -76,10 +42,16 @@ public:
 
 public:
 
-	ProcessInfoExt() = default;
-	~ProcessInfoExt() = default;
+	ProcessInfo()	= default;
+	~ProcessInfo()	= default;
 
-	ProcessInfoExt(const json& processJson);
+	ProcessInfo(const json& processJson, const std::vector<string>& fields);
+
+	virtual uint GetParentPID()	const;
+	virtual uint GetPID()		const;
+
+	//virtual string	GetPlugin()			const;
+	//virtual string	GetMethod()			const;
 
 	bool GetIsPreInstalled()	const;
 	uint GetLineNumber()		const;
@@ -91,8 +63,11 @@ public:
 	void SetIsPreInstalled(bool isPreInstalled);
 	void AppendChild(uint childPID);
 
+	json Get() const;
+
 protected:
 
+	json m_InfoJson;
 	ExtraInfo	ExtraInfo;
 
 };

@@ -12,11 +12,13 @@ using json = nlohmann::json;
 using string = std::string;
 using uint = unsigned int;
 
+typedef std::vector<string> FieldsVec;
+
 class Ruleset
 {
 public:
 
-	typedef std::map<uint, std::map<uint, std::vector<string>>> RulesetMap;
+	typedef std::map<uint, std::map<uint, FieldsVec>> RulesetMap;
 
 public:
 

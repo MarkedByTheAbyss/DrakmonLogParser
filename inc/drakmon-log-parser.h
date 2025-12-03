@@ -32,7 +32,11 @@ struct PreInstalled
 {
 	uint PID;
 	string Name;
-	string Path;
+	bool operator==(PreInstalled proc)
+	{
+		if (this->PID == proc.PID || this->Name == proc.Name)
+			return true;
+	}
 };
 
 class DrakmonLogParser 
@@ -48,10 +52,9 @@ public:
 	~DrakmonLogParser() = default;
 
 	void LoadPreInstProcs();
-	void SortProcesses();
+	void BuildProcessTree();
 	void WriteProcTree();
 	void AnalyzeProcessTree();
-	void AnalyzeProcessTree(bool);
 
 	void SetPreinstPath(const std::string path);
 	void SetLogPath(const std::string path);
@@ -68,7 +71,6 @@ protected:
 	void InsertPreInstProcess(json const Json);
 	bool CheckPreInstalled(PreInstalled proc);
 	int FormRecord(Functions::CallbackData* data);
-	json GetJsonByOffset(int64_t offset);
 	static int Callback(YR_SCAN_CONTEXT* context, int message, void* messageData, void* userData);
 
 	template<Filestream T> 
@@ -78,7 +80,6 @@ protected:
 
 	ProcessTree m_ProcessTree;
 	PreInstalledProcs m_PreInstProcs;
-	FileOffsets m_Offsets;
 
 	string m_PreinstPath;
 	string m_LogPath;

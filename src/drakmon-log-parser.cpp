@@ -17,7 +17,7 @@ void DrakmonLogParser::LoadInjectedPID(const json injectedJson)
 	processJson["PID"] = injPID;
 	processJson["ProcessName"] = ProcessName;
 
-	ProcessInfoExt injInfoExt(processJson);
+	ProcessInfo injInfoExt(processJson, { "PID", "ProcessName" });
 	m_ProcessTree.Insert(injPID, injInfoExt);
 }
 
@@ -26,17 +26,6 @@ T DrakmonLogParser::OpenFile(const string& Filename)
 {
 	T file(Filename);
 	return file;
-}
-
-std::string DrakmonLogParser::CreateTempFilePath()
-{
-	namespace fs = std::filesystem;
-	std::string filename;
-
-	do {
-		filename = fs::temp_directory_path().string() + "/temp_drakmon_" + std::to_string(GET_PID()) + std::to_string(rand()) + ".log";
-	} while (fs::exists(filename));
-	return filename;
 }
 
 void DrakmonLogParser::LoadPreInstProcs()
@@ -53,35 +42,28 @@ void DrakmonLogParser::LoadPreInstProcs()
 	file.close();
 }
 
-void DrakmonLogParser::SortProcesses()
+void DrakmonLogParser::BuildProcessTree()
 {
+	// add rulesPath as member
+	m_Ruleset.LoadRules("e:\\GitRepos\\drakmonLogParser\\DrakmonLogParser\\parsing_rules\\rules.json");
+
 	std::ifstream file = OpenFile<std::ifstream>(m_LogPath);
 	if (not file.is_open()) RETERR();
-
-	m_TempLogPath = CreateTempFilePath();
-	std::ofstream sortedLogFile = OpenFile<std::ofstream>(m_TempLogPath);
-	if (not sortedLogFile.is_open()) RETERR();
 
 	string line;
 
 	std::getline(file, line);
 	LoadInjectedPID(Str2Json(line));
 
-	m_Offsets.push_back(0);
 	uint linenum = 1;
 	while (not file.eof())
 	{
 		std::getline(file, line);
 		json json = Str2Json(line);
-		if (InsertProcess(json, linenum) == 0)
-		{
-			sortedLogFile << line + '\n';
-			m_Offsets.push_back(sortedLogFile.tellp());
-		}
+		InsertProcess(json, linenum);
 		++linenum;
 	}
 	file.close();
-	sortedLogFile.close();
 }
 
 //void drakmonLogParser::WriteProcTree()
@@ -92,31 +74,29 @@ void DrakmonLogParser::SortProcesses()
 //	}
 //}
 
+//void DrakmonLogParser::AnalyzeProcessTree()
+//{
+//	std::ifstream sortedLogFile = OpenFile<std::ifstream>(m_TempLogPath);
+//	if (not sortedLogFile.is_open()) RETERR();
+//	
+//	m_Analyzer = new YaraAnalyzer();
+//	if (m_Analyzer->Initilalize() != 0) RETERR();
+//
+//	if (m_Analyzer->LoadRules(m_RulesPath.data()) != 0) RETERR();
+//
+//	m_Analyzer->SetCallback(Callback);
+//
+//	sortedLogFile.close();
+//	Functions::CallbackData userData;
+//	m_Analyzer->Scan(m_TempLogPath.c_str(), 0, &userData);
+//
+//	FormRecord(&userData);
+//
+//	std::remove(m_TempLogPath.c_str());
+//	return;
+//}
+
 void DrakmonLogParser::AnalyzeProcessTree()
-{
-	m_Ruleset.LoadRules("e:\\GitRepos\\drakmonLogParser\\DrakmonLogParser\\parsing_rules\\rules.json");
-
-	std::ifstream sortedLogFile = OpenFile<std::ifstream>(m_TempLogPath);
-	if (not sortedLogFile.is_open()) RETERR();
-	
-	m_Analyzer = new YaraAnalyzer();
-	if (m_Analyzer->Initilalize() != 0) RETERR();
-
-	if (m_Analyzer->LoadRules(m_RulesPath.data()) != 0) RETERR();
-
-	m_Analyzer->SetCallback(Callback);
-
-	sortedLogFile.close();
-	Functions::CallbackData userData;
-	m_Analyzer->Scan(m_TempLogPath.c_str(), 0, &userData);
-
-	FormRecord(&userData);
-
-	std::remove(m_TempLogPath.c_str());
-	return;
-}
-
-void DrakmonLogParser::AnalyzeProcessTree(bool flag)
 {
 	m_Analyzer = new YaraAnalyzer();
 	if (m_Analyzer->Initilalize() != 0) RETERR();
@@ -130,7 +110,7 @@ void DrakmonLogParser::AnalyzeProcessTree(bool flag)
 
 	for (const auto& [key, value] : map)
 	{
-		string jsonString = to_string(value.GetAsJson());
+		string jsonString = to_string(value.Get());
 		m_Analyzer->Scan((uint8_t*)jsonString.data(), jsonString.length(), 0, &userData);
 	}
 
@@ -155,14 +135,25 @@ int DrakmonLogParser::InsertProcess(json const json, const uint linenum)
 {
 	try
 	{
-		ProcessInfoExt procInfo(json);
-		ProcessInfoExt* parent = m_ProcessTree.GetProcess(procInfo.GetParentPID());
-		if (parent == nullptr || false)
+		string jsonPlugin = GetOptVal<string>(json, "Plugin").value_or("");
+		string jsonMethod = GetOptVal<string>(json, "Method").value_or("");
+
+		if (CheckPreInstalled)
 			return 1;
+
+		if (jsonPlugin.empty() || jsonMethod.empty())
+			return 2;
+		FieldsVec ruleFields = m_Ruleset.GetRuleFields(jsonPlugin, jsonMethod);
+
+		ProcessInfo procInfo(json, ruleFields);
+		ProcessInfo* parent = m_ProcessTree.GetProcess(procInfo.GetParentPID());
+		if (parent == nullptr || false)
+			return 3;
+
 		parent->AppendChild(procInfo.GetPID());
 		
-		procInfo.SetLineNumber(linenum);
-		m_ProcessTree.Insert(procInfo.GetPID(), procInfo);
+		//procInfo.SetLineNumber(linenum);
+		m_ProcessTree.Insert(linenum, procInfo);
 		return 0;
 	}
 	catch (json::exception& e)
@@ -179,7 +170,6 @@ void DrakmonLogParser::InsertPreInstProcess(json const json)
 		{
 			GetOptVal<uint>(json, "PID").value_or(-1),
 			GetOptVal<string>(json, "ProcessName").value_or(""),
-			GetOptVal<string>(json, "Path").value_or("")
 		};
 		m_PreInstProcs.push_back(process);
 	}
@@ -191,11 +181,11 @@ void DrakmonLogParser::InsertPreInstProcess(json const json)
 
 bool DrakmonLogParser::CheckPreInstalled(PreInstalled proc)
 {
-	for (auto& e : m_PreInstProcs)
+	/*for (auto& e : m_PreInstProcs)
 	{
-		if (e.PID == proc.PID || (e.Name == proc.Name && e.Path == proc.Path))
+		if (e == proc - HUETA)
 			return true;
-	}
+	}*/
 	return false;
 }
 
@@ -273,28 +263,6 @@ int DrakmonLogParser::FormRecord(Functions::CallbackData* data)
 	return 0;
 }
 
-json DrakmonLogParser::GetJsonByOffset(int64_t offset)
-{
-	std::ifstream file = OpenFile<std::ifstream>(m_TempLogPath);
-	if (not file.is_open())
-	{
-		LOGERR();
-		return NULL;
-	}
-
-	if (not m_Offsets.empty())
-	{
-		uint curOffsetInd = std::lower_bound(m_Offsets.begin(), m_Offsets.end(), offset) - m_Offsets.begin();
-		file.seekg(m_Offsets[curOffsetInd-1]);
-
-		string line;
-		std::getline(file, line);
-		file.close();
-		return Str2Json(line);
-	}
-	return NULL;	
-}
-
 int DrakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* messageData, void* userData)
 {
 	YR_RULE* actRule = static_cast<YR_RULE*>(messageData);
@@ -321,10 +289,6 @@ int DrakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* mess
 
 					case STRHASH("IP"):
 						ruleString["IP"] = Functions::GetIps(context, str);
-						break;
-
-					case STRHASH("SaveMatch"):
-						Functions::GetMatchJson(callbackData, context, str);
 						break;
 
 					default:

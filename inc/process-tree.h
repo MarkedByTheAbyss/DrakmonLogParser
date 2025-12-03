@@ -9,15 +9,15 @@ class ProcessTree
 {
 public:
 	
-	typedef std::map<uint, ProcessInfoExt> ProcessMap;
+	typedef std::map<uint, ProcessInfo> ProcessMap;
 
 public:
 
-	void Insert(uint ParentPID, ProcessInfoExt NewNode);
-	bool Contains(const uint& PID) const;
-	ProcessInfoExt* GetProcess(uint PID);
-	void SetInjectedPID	(uint PID);
-	uint GetInjectedPID(uint PID) const;
+	void Insert(uint parentPID, ProcessInfo newNode);
+	bool Contains(const uint& pid) const;
+	ProcessInfo* GetProcess(uint pid);
+	void SetInjectedPID	(uint pid);
+	uint GetInjectedPID(uint pid) const;
 	bool IsEmpty() const;
 	const ProcessMap& GetTree() const;
 
