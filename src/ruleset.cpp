@@ -17,6 +17,7 @@ int Ruleset::LoadRules(string filename)
 	}
 	catch (json::exception e)
 	{
+		std::cout << e.what();
 		status = 1;
 	}
 	return status;
@@ -40,16 +41,21 @@ void Ruleset::InsertRule(const json& rule)
 		for (const json& methodJson : methods)
 		{
 			string methodName = GetOptVal<string>(methodJson, "Method").value_or("");
-			json methodFields = GetOptVal<json>(methodJson, "Fields").value_or(NULL);
-			uint methodHash = STRHASH(methodName.c_str());
-			
-			m_RulesetMap[pluginHash].insert({ methodHash, {} });
-			for (const string& field : methodFields)
-				m_RulesetMap[pluginHash][methodHash].push_back(field);
+			json methodFields;
+			if (methodJson.contains("Fields"))
+				methodFields = GetOptVal<json>(methodJson, "Fields").value_or(NULL);
 
-			if (pluginFields == NULL) continue;
-			for (const string& field : pluginFields)
-				m_RulesetMap[pluginHash][methodHash].push_back(field);
+			uint methodHash = STRHASH(methodName.c_str());
+			m_RulesetMap[pluginHash].insert({ methodHash, {} });
+
+
+			if (pluginFields != NULL);
+				for (const string& field : pluginFields)
+					m_RulesetMap[pluginHash][methodHash].push_back(field);
+
+			if (methodFields != NULL)
+				for (const string& field : methodFields)
+					m_RulesetMap[pluginHash][methodHash].push_back(field);
 		}
 	}
 	

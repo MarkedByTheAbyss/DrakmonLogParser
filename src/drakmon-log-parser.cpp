@@ -101,23 +101,81 @@ void DrakmonLogParser::AnalyzeProcessTree()
 	m_Analyzer = new YaraAnalyzer();
 	if (m_Analyzer->Initilalize() != 0) RETERR();
 
-	if (m_Analyzer->LoadRules(m_RulesPath.data()) != 0) RETERR();
+	if (m_Analyzer->LoadRules(m_RulesPath.c_str()) != 0) RETERR();
 
 	m_Analyzer->SetCallback(Callback);
 
 	const ProcessTree::ProcessMap map = m_ProcessTree.GetTree();
-	Functions::CallbackData userData;
+	Functions::CallbackInfo callbackInfo;
+	json recordData = json::array();
 
 	for (const auto& [key, value] : map)
 	{
 		string jsonString = to_string(value.Get());
-		m_Analyzer->Scan((uint8_t*)jsonString.data(), jsonString.length(), 0, &userData);
+		m_Analyzer->Scan((uint8_t*)jsonString.data(), jsonString.length(), 0, &callbackInfo);
+		AddRecordData(recordData, callbackInfo);
+		callbackInfo.clear();
 	}
 
-	FormRecord(&userData);
+	FormRecord(recordData);
+	SaveDebugInfo();
 
 	std::remove(m_TempLogPath.c_str());
 	return;
+}
+
+void DrakmonLogParser::AddRecordData(json& jsonData, const Functions::CallbackInfo& info)
+{
+	if (info.matchInfo.rule == nullptr)
+		return;
+
+	string rule = info.matchInfo.rule;
+	string str = info.matchInfo.string;
+
+	bool isRuleFound = false;
+	for (json& ruleJson : jsonData)
+	{
+		if (ruleJson["Rule"] == rule)
+		{
+			isRuleFound = true;
+			ruleJson["Count"] = ruleJson["Count"] + 1;
+
+			bool isStringFound = false;
+			for (json& strJson : ruleJson["Strings"])
+			{
+				if (strJson["String"] == str)
+				{
+					isStringFound == true;
+					strJson["Count"] = strJson["Count"] + 1;
+
+					break;
+				}
+			}
+			if (not isStringFound)
+			{
+				json strJson;
+				strJson["String"] = str;
+				strJson["Count"] = 1;
+				ruleJson["Strings"].push_back(strJson);
+			}
+
+			break;
+		}
+	}
+	if (not isRuleFound)
+	{
+		json ruleJson;
+		ruleJson["Rule"] = rule;
+		ruleJson["Count"] = 1;
+		ruleJson["Strings"] = json::array();
+
+		json strJson;
+		strJson["String"] = str;
+		strJson["Count"] = 1;
+		ruleJson["Strings"].push_back(strJson);
+
+		jsonData.push_back(ruleJson);
+	}
 }
 
 json DrakmonLogParser::Str2Json(string const Logline) const
@@ -138,8 +196,8 @@ int DrakmonLogParser::InsertProcess(json const json, const uint linenum)
 		string jsonPlugin = GetOptVal<string>(json, "Plugin").value_or("");
 		string jsonMethod = GetOptVal<string>(json, "Method").value_or("");
 
-		if (CheckPreInstalled)
-			return 1;
+		//if (CheckPreInstalled)
+			//return 1;
 
 		if (jsonPlugin.empty() || jsonMethod.empty())
 			return 2;
@@ -189,77 +247,21 @@ bool DrakmonLogParser::CheckPreInstalled(PreInstalled proc)
 	return false;
 }
 
-int DrakmonLogParser::FormRecord(Functions::CallbackData* data)
+int DrakmonLogParser::FormRecord(const json& recordJson)
 {
-	if (!std::filesystem::is_directory(m_RecordDirPath))
-		std::filesystem::create_directories(m_RecordDirPath);
+	if (not recordJson.is_array())
+		return 1;
 
 	std::ofstream recordFile = OpenFile<std::ofstream>(m_RecordDirPath + "record.json");
 	if (!recordFile.is_open())
 	{
 		LOGERR();
-		return 1;
-	}
-	std::ofstream matchesFile;
-	if (m_SaveMatches)
-	{
-		matchesFile = OpenFile<std::ofstream>(m_RecordDirPath + "savedMatches.json");
-		if (!matchesFile.is_open())
-		{
-			LOGERR();
-			return 1;
-		}
+		return 2;
 	}
 
-	recordFile << '{' << std::endl;
-	for (const auto& elem : data->matchCount)
-	{
-		json ruleJson;
-		json ruleStrings = json::array();
-		int ruleCount = 0;
-		for (const auto& strMatchCount : elem.second)
-		{
-			json strJson;
-			strJson["String"] = strMatchCount.strName;
-			strJson["Count"] = strMatchCount.count;
-			ruleCount += strMatchCount.count;
-			if (data->lineOffsets.contains(strMatchCount.strName))
-			{
-				json matchInfo = json::array();
-				for (const auto& offset : data->lineOffsets[strMatchCount.strName])
-				{
-					json logLine = GetJsonByOffset(offset);
-					if (not logLine.empty())
-					{
-						if (m_SaveMatches)
-							matchesFile << logLine << std::endl;
-						json logLineInfo;
-						logLineInfo["PID"] = GetOptVal<uint>(logLine, "PID").value_or(-1);
-						logLineInfo["PPID"] = GetOptVal<uint>(logLine, "PPID").value_or(-1);
-						string procName = GetOptVal<std::string>(logLine, "ProcessName").value_or("");
-						if (!procName.empty())
-							logLineInfo["ProcessName"] = procName.substr(procName.rfind('\\') + 1);
-						logLineInfo["Method"] = GetOptVal<std::string>(logLine, "Method").value_or("");
-						matchInfo += logLineInfo;
-					}
-				}
-				strJson["Matches"] = matchInfo;
-			}
-			ruleStrings += strJson;
-		}
-		ruleJson["Rule"] = elem.first;
-		ruleJson["Strings"] = ruleStrings;
-		ruleJson["Count"] =  ruleCount;
-		if (not data->recordData[elem.first].empty())
-			ruleJson["Data"] = data->recordData[elem.first];
-		recordFile << ruleJson << std::endl;
-		ruleCount = 0;
-	}
-	recordFile << '}' << std::endl;
-
+	recordFile << recordJson.dump(4);
+	
 	recordFile.close();
-	if (m_SaveMatches)
-		matchesFile.close();
 	return 0;
 }
 
@@ -268,39 +270,55 @@ int DrakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* mess
 	YR_RULE* actRule = static_cast<YR_RULE*>(messageData);
 	if (actRule && message == CALLBACK_MSG_RULE_MATCHING)
 	{
-		Functions::CallbackData* callbackData = static_cast<Functions::CallbackData*>(userData);
+		Functions::CallbackInfo* callbackData = static_cast<Functions::CallbackInfo*>(userData);
 		YR_STRING* str;
 		yr_rule_strings_foreach(actRule, str)
 		{
 			if (str)
 			{
-				uint count = context->matches[str->idx].count;
-				Functions::SetMatchesCount(callbackData, actRule->identifier, str->identifier, count);
+				Functions::SetMatchesInfo(callbackData, actRule->identifier, str->identifier);
 
-				json ruleString;
+				json ruleStringsExt;
 				const char* tag;
 				yr_rule_tags_foreach(actRule, tag)
 				{
 					switch (STRHASH(tag))
 					{
 					case STRHASH("URL"):
-						ruleString["URL"] = Functions::GetUrls(context, str);
+						ruleStringsExt["URL"] = Functions::GetUrls(context, str);
 						break;
 
 					case STRHASH("IP"):
-						ruleString["IP"] = Functions::GetIps(context, str);
+						ruleStringsExt["IP"] = Functions::GetIps(context, str);
 						break;
 
 					default:
 						break;
 					}
 				}
-				if (!ruleString.empty())
-					Functions::AddRecordData(callbackData, actRule->identifier, ruleString);
+				if (!ruleStringsExt.empty())
+					Functions::AddRuleData(callbackData, actRule->identifier, ruleStringsExt);
 			}
 		}
 	}
 	return CALLBACK_CONTINUE;
+}
+
+void DrakmonLogParser::SetRecordDirPath()
+{
+	using namespace std::chrono;
+
+	std::stringstream ss;
+	ss << "debug\\";
+	
+	auto now = time_point_cast<milliseconds>(system_clock::now());
+	ss << std::format("{:%d-%m-%Y %H.%M.%S}", now) << ' ';
+
+	ss << '[' << m_LogPath.substr(m_LogPath.rfind("\\") + 1) << ']' << '\\';
+	m_RecordDirPath = ss.str();
+
+	if (!std::filesystem::is_directory(m_RecordDirPath))
+		std::filesystem::create_directories(m_RecordDirPath);
 }
 
 void DrakmonLogParser::SetPreinstPath(const std::string path)
@@ -313,11 +331,6 @@ void DrakmonLogParser::SetLogPath(const std::string path)
 	m_LogPath = path;
 }
 
-void DrakmonLogParser::SetRecordDirPath(const std::string path)
-{
-	m_RecordDirPath = path;
-}
-
 void DrakmonLogParser::SetRulesPath(const std::string path)
 {
 	m_RulesPath = path;
@@ -326,4 +339,26 @@ void DrakmonLogParser::SetRulesPath(const std::string path)
 void DrakmonLogParser::SetSaveMatches(const std::string val)
 {
 	m_SaveMatches = std::stoi(val);
+}
+
+void DrakmonLogParser::SaveDebugInfo() 
+{
+	std::ofstream debugFile = OpenFile<std::ofstream>(m_RecordDirPath + "debug.json");
+	if (!debugFile.is_open())
+	{
+		LOGERR();
+		return;
+	}
+	debugFile << "[\n";
+	bool first = true;
+	for (auto& [key, value] : m_ProcessTree)
+	{
+		if (!first)
+			debugFile << ",\n";
+		debugFile << value.Get().dump(4);
+		first = false;
+	}
+	debugFile << "]\n";
+
+	debugFile.close();
 }

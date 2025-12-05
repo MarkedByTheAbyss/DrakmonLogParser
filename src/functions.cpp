@@ -28,27 +28,37 @@
 	{	\
 	};	\
 
-using json = nlohmann::json;
+using json = nlohmann::ordered_json;
 
 
 class Functions
 {
 public:
 	
-	struct StrMatchCount
+	struct MatchInfo
 	{
-		const char* strName;
-		unsigned int count;
+		const char* rule;
+		const char* string;
 	};
 
-	typedef std::map<const char*, json> RecordData;
-	typedef std::map<const char*, std::vector<StrMatchCount>> MatchCount;
-	typedef std::map<const char*, std::vector<int64_t>> LineOffsets;
-
-	struct CallbackData
+	struct ruleDataExt
 	{
-		RecordData recordData;
-		MatchCount matchCount;
+		const char* rule;
+		json data;
+	};
+
+	struct CallbackInfo
+	{
+		ruleDataExt ruleData;
+		MatchInfo matchInfo;
+
+		void clear()
+		{
+			ruleData.rule = nullptr;
+			ruleData.data.clear();
+			matchInfo.rule = nullptr;
+			matchInfo.string = nullptr;
+		}
 	};
 
 public:
@@ -68,20 +78,16 @@ public:
 		return;
 	}
 
-	static void SetMatchesCount(CallbackData* data, const char* rule, const char* str, unsigned int count)
+	static void SetMatchesInfo(CallbackInfo* info, const char* rule, const char* str)
 	{
-		if (!data->matchCount.empty() && data->matchCount.contains(rule))
-			data->matchCount[rule].push_back({ str, count });
-		else
-			data->matchCount.insert({ rule, {{ str, count }}});
+		info->matchInfo.rule = rule;
+		info->matchInfo.string = str;
 	}
 
-	static void AddRecordData(CallbackData* data, const char* rule, json ruleString)
+	static void AddRuleData(CallbackInfo* info, const char* rule, json ruleStringsExt)
 	{
-		if (data->recordData.contains(rule))
-			data->recordData[rule].push_back(ruleString);
-		else
-			data->recordData[rule] = json::array({ ruleString });
+		info->ruleData.rule = rule;
+		info->ruleData.data = ruleStringsExt;
 	}
 
 	static std::string GetUrls(YR_SCAN_CONTEXT* context, YR_STRING* str)

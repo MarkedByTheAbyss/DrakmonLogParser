@@ -8,7 +8,7 @@
 #include "json.hpp"
 #include "../src/functions.cpp"
 
-using json = nlohmann::json;
+using json = nlohmann::ordered_json;
 using string = std::string;
 using uint = unsigned int;
 

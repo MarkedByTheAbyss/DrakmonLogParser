@@ -9,7 +9,6 @@ void ParserController::Configure(DrakmonLogParser& parser, const CLI::App& app) 
     const std::pair<const char*, std::function<void(const std::string&)>> options[] = {
         {"--preinstPath", [&parser](const auto& val) { parser.SetPreinstPath(val); }},
         {"--logPath", [&parser](const auto& val) { parser.SetLogPath(val); }},
-        {"--recordDir", [&parser](const auto& val) { parser.SetRecordDirPath(val); }},
         {"--rulesPath", [&parser](const auto& val) { parser.SetRulesPath(val); }},
         {"--saveMatches", [&parser](const auto& val) { parser.SetSaveMatches(val); }}
     };
@@ -29,6 +28,7 @@ void ParserController::PrintTimeStats(const std::string& message, time_t& start,
 int ParserController::Start(DrakmonLogParser& parser) {
     
     time_t start = time(nullptr);
+    parser.SetRecordDirPath();
     parser.LoadPreInstProcs();
     parser.BuildProcessTree();
     time_t end = time(nullptr);

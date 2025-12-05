@@ -6,7 +6,8 @@ ProcessInfo::ProcessInfo(const json& processJson, const std::vector<string>& fie
 	{
 		for (const string& field : fields)
 		{
-			m_InfoJson[field] = processJson[field];
+			if (processJson.contains(field))
+				m_InfoJson[field] = processJson[field];
 		}
 	}
 	JSONCATCH();
@@ -14,12 +15,12 @@ ProcessInfo::ProcessInfo(const json& processJson, const std::vector<string>& fie
 
 uint ProcessInfo::GetParentPID() const
 {
-	return GetOptVal<uint>(m_InfoJson, "PPID").value_or("");
+	return GetOptVal<uint>(m_InfoJson, "PPID").value_or(-1);
 }
 
 uint ProcessInfo::GetPID() const
 {
-	return GetOptVal<uint>(m_InfoJson, "PID").value_or("");
+	return GetOptVal<uint>(m_InfoJson, "PID").value_or(-1);
 }
 
 //

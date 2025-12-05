@@ -10,7 +10,7 @@
 
 using string = std::string;
 using uint = unsigned int;
-using json = nlohmann::json;
+using json = nlohmann::ordered_json;
 
 /// <summary>
 /// 

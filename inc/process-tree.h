@@ -21,6 +21,9 @@ public:
 	bool IsEmpty() const;
 	const ProcessMap& GetTree() const;
 
+	ProcessMap::const_iterator begin() const noexcept;
+	ProcessMap::const_iterator end() const noexcept;
+
 protected:
 
 	ProcessMap m_Map;

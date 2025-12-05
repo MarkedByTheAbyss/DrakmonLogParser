@@ -5,6 +5,8 @@
 #include <string>
 #include <algorithm>
 #include <cstdint>
+#include <sstream>
+#include <format>
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <../inc/yara/rules.h>
@@ -21,7 +23,7 @@
 
 #include "../src/functions.cpp"
 
-using json = nlohmann::json;
+using json = nlohmann::ordered_json;
 
 template<class T>
 concept Filestream = std::is_base_of<std::ios, T>::value;
@@ -56,9 +58,9 @@ public:
 	void WriteProcTree();
 	void AnalyzeProcessTree();
 
+	void SetRecordDirPath();
 	void SetPreinstPath(const std::string path);
 	void SetLogPath(const std::string path);
-	void SetRecordDirPath(const std::string path);
 	void SetRulesPath(const std::string path);
 	void SetSaveMatches(const std::string val);
 	
@@ -70,7 +72,10 @@ protected:
 	int InsertProcess(json const Json, const uint linenum);
 	void InsertPreInstProcess(json const Json);
 	bool CheckPreInstalled(PreInstalled proc);
-	int FormRecord(Functions::CallbackData* data);
+	int FormRecord(const json& recordJson);
+	void AddRecordData(json& jsonData, const Functions::CallbackInfo& info);
+	void SaveDebugInfo();
+
 	static int Callback(YR_SCAN_CONTEXT* context, int message, void* messageData, void* userData);
 
 	template<Filestream T> 
