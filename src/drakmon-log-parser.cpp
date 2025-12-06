@@ -145,7 +145,7 @@ void DrakmonLogParser::AddRecordData(json& jsonData, const Functions::CallbackIn
 			{
 				if (strJson["String"] == str)
 				{
-					isStringFound == true;
+					isStringFound = true;
 					strJson["Count"] = strJson["Count"] + 1;
 
 					break;
