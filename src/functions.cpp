@@ -41,21 +41,15 @@ public:
 		const char* string;
 	};
 
-	struct ruleDataExt
-	{
-		const char* rule;
-		json data;
-	};
-
 	struct CallbackInfo
 	{
-		ruleDataExt ruleData;
+		std::regex parseRegex;
+		json parsedInfo;
 		MatchInfo matchInfo;
 
 		void clear()
 		{
-			ruleData.rule = nullptr;
-			ruleData.data.clear();
+			parsedInfo.clear();
 			matchInfo.rule = nullptr;
 			matchInfo.string = nullptr;
 		}
@@ -86,8 +80,7 @@ public:
 
 	static void AddRuleData(CallbackInfo* info, const char* rule, json ruleStringsExt)
 	{
-		info->ruleData.rule = rule;
-		info->ruleData.data = ruleStringsExt;
+		info->parsedInfo[rule] = ruleStringsExt;
 	}
 
 	static std::string GetUrls(YR_SCAN_CONTEXT* context, YR_STRING* str)

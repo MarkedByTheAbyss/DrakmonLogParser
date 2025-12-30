@@ -24,8 +24,8 @@ public:
 	~YaraAnalyzer();
 	int Initilalize();
 	void SetCallback(YR_CALLBACK_FUNC func);
-	int LoadRules(const char* filename, YR_COMPILER* compiler = nullptr, bool destroy = true);
-	int LoadRules(const char** filenamesArray);
+	int Load(const char* filename, YR_COMPILER* compiler = nullptr, bool destroy = true);
+	int Load(const char** filenamesArray);
 	int Scan(const uint8_t* buf, size_t bufSize, int flags, void* userData, int timeout = 0);
 	int Scan(const char* filename, int flags, void* userData, int timeout = 0);
 	YR_RULES* GetRules() const;

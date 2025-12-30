@@ -1,7 +1,7 @@
 #include "../inc/ruleset.h"
 
 
-int Ruleset::LoadRules(string filename)
+int ProcessPipeline::Load(string filename)
 {
 	int status = 0;
 	try
@@ -12,7 +12,7 @@ int Ruleset::LoadRules(string filename)
 
 		for (const json& e : rulesetJson)
 		{
-			InsertRule(e);
+			Insert(e);
 		}
 	}
 	catch (json::exception e)
@@ -23,7 +23,7 @@ int Ruleset::LoadRules(string filename)
 	return status;
 }
 
-void Ruleset::InsertRule(const json& rule)
+void ProcessPipeline::Insert(const json& rule)
 {
 	string pluginName = GetOptVal<string>(rule, "Plugin").value_or("");
 	json methods = GetOptVal<json>(rule, "Methods").value_or(NULL);
@@ -35,41 +35,59 @@ void Ruleset::InsertRule(const json& rule)
 	uint pluginHash = STRHASH(pluginName.c_str());
 	if (methods != NULL)
 	{
-		//if (not m_RulesetMap.contains(pluginHash))
-		//	m_RulesetMap.insert({ pluginHash, {} });
-
 		for (const json& methodJson : methods)
 		{
-			string methodName = GetOptVal<string>(methodJson, "Method").value_or("");
 			json methodFields;
+			string methodName = GetOptVal<string>(methodJson, "Method").value_or("");
+
 			if (methodJson.contains("Fields"))
 				methodFields = GetOptVal<json>(methodJson, "Fields").value_or(NULL);
 
 			uint methodHash = STRHASH(methodName.c_str());
-			m_RulesetMap[pluginHash].insert({ methodHash, {} });
-
+			m_ExtractionRuleset[pluginHash].insert({ methodHash, {} });
 
 			if (pluginFields != NULL);
 				for (const string& field : pluginFields)
-					m_RulesetMap[pluginHash][methodHash].push_back(field);
+					m_ExtractionRuleset[pluginHash][methodHash].push_back(field);
 
 			if (methodFields != NULL)
 				for (const string& field : methodFields)
-					m_RulesetMap[pluginHash][methodHash].push_back(field);
+					m_ExtractionRuleset[pluginHash][methodHash].push_back(field);
+
+
+			string methodRegexString = GetOptVal<string>(methodJson, "Regex").value_or("");
+			if (not methodRegexString.empty())
+			{
+				regex methodRegex(methodRegexString);
+				m_ParsingRuleset[pluginHash][methodHash] = methodRegex;
+			}
 		}
 	}
 	
 }
 
-std::vector<string> Ruleset::GetRuleFields(string plugin, string method) const
+JsonFieldsVector ProcessPipeline::GetExtractionRuleFields(string plugin, string method) const
 {
 	uint pluginHash = STRHASH(plugin.c_str());
 	uint methodHash = STRHASH(method.c_str());
-	std::vector<string> retVal;
+	JsonFieldsVector retVal;
 
-	if (m_RulesetMap.contains(pluginHash))
-		if (m_RulesetMap.at(pluginHash).contains(methodHash))
-			retVal = m_RulesetMap.at(pluginHash).at(methodHash);
+	if (m_ExtractionRuleset.contains(pluginHash))
+		if (m_ExtractionRuleset.at(pluginHash).contains(methodHash))
+			retVal = m_ExtractionRuleset.at(pluginHash).at(methodHash);
+
+	return retVal;
+}
+
+regex ProcessPipeline::GetParsingRuleRegex(string plugin, string method) const
+{
+	uint pluginHash = STRHASH(plugin.c_str());
+	uint methodHash = STRHASH(method.c_str());
+	regex retVal;
+
+	if (m_ParsingRuleset.contains(pluginHash))
+		if (m_ParsingRuleset.at(pluginHash).contains(methodHash))
+			retVal = m_ParsingRuleset.at(pluginHash).at(methodHash);
 
 	return retVal;
 }

@@ -25,7 +25,7 @@ void YaraAnalyzer::SetCallback(YR_CALLBACK_FUNC func)
 	m_Callback = func;
 }
 
-int YaraAnalyzer::LoadRules(const char* filename, YR_COMPILER* compiler, bool destroy)
+int YaraAnalyzer::Load(const char* filename, YR_COMPILER* compiler, bool destroy)
 {
 	FILE* file;
 #if defined(_WIN32) || defined (_WIN64)

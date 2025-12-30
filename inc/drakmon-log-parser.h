@@ -94,7 +94,7 @@ protected:
 
 	bool m_SaveMatches;
 
-	Ruleset m_Ruleset;
+	ProcessPipeline m_ProcessPipeline;
 
 	YaraAnalyzer* m_Analyzer;
 

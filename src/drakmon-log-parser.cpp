@@ -45,7 +45,7 @@ void DrakmonLogParser::LoadPreInstProcs()
 void DrakmonLogParser::BuildProcessTree()
 {
 	// add rulesPath as member
-	m_Ruleset.LoadRules("e:\\GitRepos\\drakmonLogParser\\DrakmonLogParser\\parsing_rules\\rules.json");
+	m_ProcessPipeline.Load("e:\\GitRepos\\drakmonLogParser\\DrakmonLogParser\\parsing_rules\\rules.json");
 
 	std::ifstream file = OpenFile<std::ifstream>(m_LogPath);
 	if (not file.is_open()) RETERR();
@@ -101,7 +101,7 @@ void DrakmonLogParser::AnalyzeProcessTree()
 	m_Analyzer = new YaraAnalyzer();
 	if (m_Analyzer->Initilalize() != 0) RETERR();
 
-	if (m_Analyzer->LoadRules(m_RulesPath.c_str()) != 0) RETERR();
+	if (m_Analyzer->Load(m_RulesPath.c_str()) != 0) RETERR();
 
 	m_Analyzer->SetCallback(Callback);
 
@@ -138,7 +138,9 @@ void DrakmonLogParser::AddRecordData(json& jsonData, const Functions::CallbackIn
 		if (ruleJson["Rule"] == rule)
 		{
 			isRuleFound = true;
-			ruleJson["Count"] = ruleJson["Count"] + 1;
+			ruleJson["Count"] = ruleJson["Count"] + 1; 
+			if (not info.parsedInfo.empty())
+				ruleJson["AdditionalInfo"].push_back(info.parsedInfo);
 
 			bool isStringFound = false;
 			for (json& strJson : ruleJson["Strings"])
@@ -168,6 +170,10 @@ void DrakmonLogParser::AddRecordData(json& jsonData, const Functions::CallbackIn
 		ruleJson["Rule"] = rule;
 		ruleJson["Count"] = 1;
 		ruleJson["Strings"] = json::array();
+		ruleJson["AdditionalInfo"] = json::array();
+
+		if (not info.parsedInfo.empty())
+			ruleJson["AdditionalInfo"].push_back(info.parsedInfo);
 
 		json strJson;
 		strJson["String"] = str;
@@ -201,7 +207,7 @@ int DrakmonLogParser::InsertProcess(json const json, const uint linenum)
 
 		if (jsonPlugin.empty() || jsonMethod.empty())
 			return 2;
-		FieldsVec ruleFields = m_Ruleset.GetRuleFields(jsonPlugin, jsonMethod);
+		JsonFieldsVector ruleFields = m_ProcessPipeline.GetExtractionRuleFields(jsonPlugin, jsonMethod);
 
 		ProcessInfo procInfo(json, ruleFields);
 		ProcessInfo* parent = m_ProcessTree.GetProcess(procInfo.GetParentPID());
