@@ -20,7 +20,7 @@ class ProcessPipeline
 public:
 
 	typedef std::map<uint, std::map<uint, JsonFieldsVector>> JsonExtractionRuleset;
-	typedef std::map<uint, std::map<uint, regex>> RegexParsingRuleset;
+	typedef std::map<uint, std::map<uint, string>> RegexParsingPatterns;
 
 public:
 
@@ -29,7 +29,7 @@ public:
 
 	int Load(string filename);
 	JsonFieldsVector GetExtractionRuleFields(string plugin, string method) const;
-	regex GetParsingRuleRegex(string plugin, string method) const;
+	string GetParsingPattern(string plugin, string method) const;
 
 private:
 
@@ -50,7 +50,7 @@ private:
 private:
 
 	JsonExtractionRuleset	m_ExtractionRuleset;
-	RegexParsingRuleset		m_ParsingRuleset;
+	RegexParsingPatterns	m_ParsingPatterns;
 
 };
 

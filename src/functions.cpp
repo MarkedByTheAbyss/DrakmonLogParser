@@ -43,12 +43,14 @@ public:
 
 	struct CallbackInfo
 	{
-		std::regex parseRegex;
+		std::string parsingPattern;
+
 		json parsedInfo;
 		MatchInfo matchInfo;
 
 		void clear()
 		{
+			parsingPattern.clear();
 			parsedInfo.clear();
 			matchInfo.rule = nullptr;
 			matchInfo.string = nullptr;
@@ -78,12 +80,13 @@ public:
 		info->matchInfo.string = str;
 	}
 
-	static void AddRuleData(CallbackInfo* info, const char* rule, json ruleStringsExt)
+	static void AddParsedData(CallbackInfo* info, std::string parsedData)
 	{
-		info->parsedInfo[rule] = ruleStringsExt;
+		info->parsedInfo["ParsedData"] = parsedData;
 	}
 
-	static std::string GetUrls(YR_SCAN_CONTEXT* context, YR_STRING* str)
+	static std::string Parse(YR_SCAN_CONTEXT* context, YR_STRING* str,
+		std::regex parsingRegex)
 	{
 		YR_MATCH* yrMatch;
 		yr_string_matches_foreach(context, str, yrMatch)
@@ -91,36 +94,14 @@ public:
 			if (yrMatch)
 			{
 				std::string curString((char*)yrMatch->data);
-				int offset = curString.find("Arguments\":") + strlen("Arguments\":");
-				curString = curString.substr(offset, yrMatch->match_length);
-				const char* regex = R"((http(s?):\/\/)?[a-zA-Z0-9\.\-_]+(\.[a-zA-Z]{2,6})+(\/[a-zA-Z0-9_\-\.\/\?\%\#\&\=]*)?)";
-				std::regex reg(regex);
 				std::smatch match;
-				if (std::regex_search(curString, match, reg))
+				if (std::regex_search(curString, match, parsingRegex))
 				{
 					return match.str();
 				}
 			}
 		}
-	}
-
-	static std::string GetIps(YR_SCAN_CONTEXT* context, YR_STRING* str)
-	{
-		YR_MATCH* yrMatch;
-		yr_string_matches_foreach(context, str, yrMatch)
-		{
-			if (yrMatch)
-			{
-				std::string curString((char*)yrMatch->data);
-				const char* regex = R"(((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4})";
-				std::regex reg(regex);
-				std::smatch match;
-				if (std::regex_search(curString, match, reg))
-				{
-					return match.str();
-				}
-			}
-		}
+		return "";
 	}
 
 };

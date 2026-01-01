@@ -55,11 +55,10 @@ void ProcessPipeline::Insert(const json& rule)
 					m_ExtractionRuleset[pluginHash][methodHash].push_back(field);
 
 
-			string methodRegexString = GetOptVal<string>(methodJson, "Regex").value_or("");
-			if (not methodRegexString.empty())
+			string parsingPattern = GetOptVal<string>(methodJson, "Regex").value_or("");
+			if (not parsingPattern.empty())
 			{
-				regex methodRegex(methodRegexString);
-				m_ParsingRuleset[pluginHash][methodHash] = methodRegex;
+				m_ParsingPatterns[pluginHash][methodHash] = parsingPattern;
 			}
 		}
 	}
@@ -79,15 +78,15 @@ JsonFieldsVector ProcessPipeline::GetExtractionRuleFields(string plugin, string 
 	return retVal;
 }
 
-regex ProcessPipeline::GetParsingRuleRegex(string plugin, string method) const
+string ProcessPipeline::GetParsingPattern(string plugin, string method) const
 {
 	uint pluginHash = STRHASH(plugin.c_str());
 	uint methodHash = STRHASH(method.c_str());
-	regex retVal;
+	string retVal;
 
-	if (m_ParsingRuleset.contains(pluginHash))
-		if (m_ParsingRuleset.at(pluginHash).contains(methodHash))
-			retVal = m_ParsingRuleset.at(pluginHash).at(methodHash);
+	if (m_ParsingPatterns.contains(pluginHash))
+		if (m_ParsingPatterns.at(pluginHash).contains(methodHash))
+			retVal = m_ParsingPatterns.at(pluginHash).at(methodHash);
 
 	return retVal;
 }

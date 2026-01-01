@@ -1,9 +1,11 @@
 #include "../inc/process-info.h"
 
-ProcessInfo::ProcessInfo(const json& processJson, const std::vector<string>& fields)
+ProcessInfo::ProcessInfo(const json& processJson, 
+	const std::vector<string>& fields, string parsingPattern)
 {
 	try
 	{
+		m_ParsingPattern = parsingPattern;
 		for (const string& field : fields)
 		{
 			if (processJson.contains(field))
@@ -41,17 +43,17 @@ json ProcessInfo::Get() const
 
 void ProcessInfo::AddDroppedFile(DroppedFile File)
 {
-	this->ExtraInfo.DroppedFiles.push_back(File);
+	this->m_ExtraInfo.DroppedFiles.push_back(File);
 }
 
 void ProcessInfo::SetFlag(string Flagname, uint Count)
 {
-	this->ExtraInfo.Flags.insert({ Flagname, Count });
+	this->m_ExtraInfo.Flags.insert({ Flagname, Count });
 }
 
 void ProcessInfo::AppendChild(uint ChildPID)
 {
-	this->ExtraInfo.Childs.push_back(ChildPID);
+	this->m_ExtraInfo.Childs.push_back(ChildPID);
 }
 
 json ProcessInfo::GetAsJsonExt() const
@@ -63,15 +65,15 @@ json ProcessInfo::GetAsJsonExt() const
 	extraInfo["LineNumber"] = GetLineNumber();
 
 	json dropped = json::array();
-	for (const auto& e : this->ExtraInfo.DroppedFiles)
+	for (const auto& e : this->m_ExtraInfo.DroppedFiles)
 		;//dropped.push_back(e);
 
 	json flags = json::array();
-	for (const auto& e : this->ExtraInfo.Flags)
+	for (const auto& e : this->m_ExtraInfo.Flags)
 		flags[e.first] = e.second;
 
 	json childs = json::array();
-	for (const auto& e : this->ExtraInfo.Childs)
+	for (const auto& e : this->m_ExtraInfo.Childs)
 		childs.push_back(e);
 
 	if (not dropped.empty())
@@ -84,24 +86,29 @@ json ProcessInfo::GetAsJsonExt() const
 	retVal["ExtraInfo"] = extraInfo;
 
 	return retVal;
-} 
+}
+std::string ProcessInfo::GetParsingPattern() const
+{
+	return m_ParsingPattern;
+}
+
 
 bool ProcessInfo::GetIsPreInstalled() const
 {
-	return this->ExtraInfo.IsPreInstalled;
+	return this->m_ExtraInfo.IsPreInstalled;
 }
 
 uint ProcessInfo::GetLineNumber() const
 {
-	return this->ExtraInfo.LineNumber;
+	return this->m_ExtraInfo.LineNumber;
 }
 
 void ProcessInfo::SetLineNumber(uint lineNumber)
 {
-	this->ExtraInfo.LineNumber = lineNumber;
+	this->m_ExtraInfo.LineNumber = lineNumber;
 }
 
 void ProcessInfo::SetIsPreInstalled(bool isPreInstalled)
 {
-	this->ExtraInfo.IsPreInstalled = isPreInstalled;
+	this->m_ExtraInfo.IsPreInstalled = isPreInstalled;
 }

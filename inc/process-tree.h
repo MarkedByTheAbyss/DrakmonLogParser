@@ -13,7 +13,7 @@ public:
 
 public:
 
-	void Insert(uint parentPID, ProcessInfo newNode);
+	void Insert(uint linenum, ProcessInfo newNode);
 	bool Contains(const uint& pid) const;
 	ProcessInfo* GetProcess(uint pid);
 	void SetInjectedPID	(uint pid);

@@ -1,9 +1,9 @@
 #include "../inc/process-tree.h"
 
 
-void ProcessTree::Insert(uint ParentPID, ProcessInfo NewNode)
+void ProcessTree::Insert(uint linenum, ProcessInfo newNode)
 {
-	this->m_Map.insert({ ParentPID, NewNode });
+	this->m_Map.insert({ linenum, newNode });
 }
 
 bool ProcessTree::Contains(const uint& pid) const

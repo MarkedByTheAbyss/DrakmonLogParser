@@ -45,7 +45,8 @@ public:
 	ProcessInfo()	= default;
 	~ProcessInfo()	= default;
 
-	ProcessInfo(const json& processJson, const std::vector<string>& fields);
+	ProcessInfo(const json& processJson, const std::vector<string>& fields,
+		string parsingPattern = "");
 
 	virtual uint GetParentPID()	const;
 	virtual uint GetPID()		const;
@@ -53,9 +54,10 @@ public:
 	//virtual string	GetPlugin()			const;
 	//virtual string	GetMethod()			const;
 
-	bool GetIsPreInstalled()	const;
-	uint GetLineNumber()		const;
-	json GetAsJsonExt()			const;
+	bool	GetIsPreInstalled()	const;
+	uint	GetLineNumber()		const;
+	json	GetAsJsonExt()		const;
+	string	GetParsingPattern()	const;
 
 	void AddDroppedFile(DroppedFile file);
 	void SetFlag(string flagName, uint count);
@@ -68,7 +70,8 @@ public:
 protected:
 
 	json m_InfoJson;
-	ExtraInfo	ExtraInfo;
+	ExtraInfo m_ExtraInfo;
+	string m_ParsingPattern;
 
 };
 

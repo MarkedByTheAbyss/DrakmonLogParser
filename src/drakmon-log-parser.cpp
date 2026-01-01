@@ -17,8 +17,8 @@ void DrakmonLogParser::LoadInjectedPID(const json injectedJson)
 	processJson["PID"] = injPID;
 	processJson["ProcessName"] = ProcessName;
 
-	ProcessInfo injInfoExt(processJson, { "PID", "ProcessName" });
-	m_ProcessTree.Insert(injPID, injInfoExt);
+	ProcessInfo injectedInfo(processJson, { "PID", "ProcessName" });
+	m_ProcessTree.Insert(injPID, injectedInfo);
 }
 
 template<Filestream T> 
@@ -107,10 +107,14 @@ void DrakmonLogParser::AnalyzeProcessTree()
 
 	const ProcessTree::ProcessMap map = m_ProcessTree.GetTree();
 	Functions::CallbackInfo callbackInfo;
+	callbackInfo.clear();
 	json recordData = json::array();
 
 	for (const auto& [key, value] : map)
 	{
+		string parsingPattern = value.GetParsingPattern();
+		callbackInfo.parsingPattern = parsingPattern;
+
 		string jsonString = to_string(value.Get());
 		m_Analyzer->Scan((uint8_t*)jsonString.data(), jsonString.length(), 0, &callbackInfo);
 		AddRecordData(recordData, callbackInfo);
@@ -207,9 +211,12 @@ int DrakmonLogParser::InsertProcess(json const json, const uint linenum)
 
 		if (jsonPlugin.empty() || jsonMethod.empty())
 			return 2;
-		JsonFieldsVector ruleFields = m_ProcessPipeline.GetExtractionRuleFields(jsonPlugin, jsonMethod);
 
-		ProcessInfo procInfo(json, ruleFields);
+		JsonFieldsVector extRuleFields = m_ProcessPipeline.GetExtractionRuleFields(jsonPlugin, 
+			jsonMethod);
+		string parsingPattern = m_ProcessPipeline.GetParsingPattern(jsonPlugin, jsonMethod);
+
+		ProcessInfo procInfo(json, extRuleFields, parsingPattern);
 		ProcessInfo* parent = m_ProcessTree.GetProcess(procInfo.GetParentPID());
 		if (parent == nullptr || false)
 			return 3;
@@ -264,8 +271,9 @@ int DrakmonLogParser::FormRecord(const json& recordJson)
 		LOGERR();
 		return 2;
 	}
-
+	
 	recordFile << recordJson.dump(4);
+	//recordFile << recordJson.dump(4, ' ', false, json::error_handler_t::ignore);
 	
 	recordFile.close();
 	return 0;
@@ -284,26 +292,14 @@ int DrakmonLogParser::Callback(YR_SCAN_CONTEXT* context, int message, void* mess
 			{
 				Functions::SetMatchesInfo(callbackData, actRule->identifier, str->identifier);
 
-				json ruleStringsExt;
-				const char* tag;
-				yr_rule_tags_foreach(actRule, tag)
+				if (not callbackData->parsingPattern.empty())
 				{
-					switch (STRHASH(tag))
-					{
-					case STRHASH("URL"):
-						ruleStringsExt["URL"] = Functions::GetUrls(context, str);
-						break;
+					std::regex parsingRegex(callbackData->parsingPattern);
+					string parsedData = Functions::Parse(context, str, parsingRegex);
 
-					case STRHASH("IP"):
-						ruleStringsExt["IP"] = Functions::GetIps(context, str);
-						break;
-
-					default:
-						break;
-					}
+					if (not parsedData.empty())
+						Functions::AddParsedData(callbackData, parsedData);
 				}
-				if (!ruleStringsExt.empty())
-					Functions::AddRuleData(callbackData, actRule->identifier, ruleStringsExt);
 			}
 		}
 	}
