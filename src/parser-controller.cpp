@@ -9,7 +9,8 @@ void ParserController::Configure(DrakmonLogParser& parser, const CLI::App& app) 
     const std::pair<const char*, std::function<void(const std::string&)>> options[] = {
         {"--preinstPath", [&parser](const auto& val) { parser.SetPreinstPath(val); }},
         {"--logPath", [&parser](const auto& val) { parser.SetLogPath(val); }},
-        {"--rulesPath", [&parser](const auto& val) { parser.SetRulesPath(val); }},
+        {"--yaraPath", [&parser](const auto& val) { parser.SetYaraRulesPath(val); }},
+        {"--rulesPath", [&parser](const auto& val) { parser.SetParsingRulesPath(val); }},
         {"--saveMatches", [&parser](const auto& val) { parser.SetSaveMatches(val); }}
     };
     

@@ -61,7 +61,8 @@ public:
 	void SetRecordDirPath();
 	void SetPreinstPath(const std::string path);
 	void SetLogPath(const std::string path);
-	void SetRulesPath(const std::string path);
+	void SetYaraRulesPath(const std::string path);
+	void SetParsingRulesPath(const std::string path);
 	void SetSaveMatches(const std::string val);
 	
 protected:
@@ -89,7 +90,8 @@ protected:
 	string m_PreinstPath;
 	string m_LogPath;
 	string m_RecordDirPath;
-	string m_RulesPath;
+	string m_YaraPath;
+	string m_ParsingRulesPath;
 	string m_TempLogPath;
 
 	bool m_SaveMatches;

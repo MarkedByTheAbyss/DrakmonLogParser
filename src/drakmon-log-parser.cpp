@@ -45,7 +45,7 @@ void DrakmonLogParser::LoadPreInstProcs()
 void DrakmonLogParser::BuildProcessTree()
 {
 	// add rulesPath as member
-	m_ProcessPipeline.Load("e:\\GitRepos\\drakmonLogParser\\DrakmonLogParser\\parsing_rules\\rules.json");
+	m_ProcessPipeline.Load(m_ParsingRulesPath);
 
 	std::ifstream file = OpenFile<std::ifstream>(m_LogPath);
 	if (not file.is_open()) RETERR();
@@ -101,7 +101,7 @@ void DrakmonLogParser::AnalyzeProcessTree()
 	m_Analyzer = new YaraAnalyzer();
 	if (m_Analyzer->Initilalize() != 0) RETERR();
 
-	if (m_Analyzer->Load(m_RulesPath.c_str()) != 0) RETERR();
+	if (m_Analyzer->Load(m_YaraPath.c_str()) != 0) RETERR();
 
 	m_Analyzer->SetCallback(Callback);
 
@@ -333,9 +333,14 @@ void DrakmonLogParser::SetLogPath(const std::string path)
 	m_LogPath = path;
 }
 
-void DrakmonLogParser::SetRulesPath(const std::string path)
+void DrakmonLogParser::SetYaraRulesPath(const std::string path)
 {
-	m_RulesPath = path;
+	m_YaraPath = path;
+}
+
+void DrakmonLogParser::SetParsingRulesPath(const std::string path)
+{
+	m_ParsingRulesPath = path;
 }
 
 void DrakmonLogParser::SetSaveMatches(const std::string val)
